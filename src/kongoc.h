@@ -13,4 +13,11 @@ struct BytecodeFile {
     std::string version;
 };
 
-void vm (BytecodeFile const& bytecode);
+
+class VM {
+public:
+   VM();
+   ~VM();
+   int interp_chunk(std::vector<uint8_t> chunk); 
+
+};
