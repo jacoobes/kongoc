@@ -106,6 +106,12 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
                 // Implement as needed
                 break;
             case Instruction::DefGlobal: {
+                instr_ptr += 1;
+                auto name_idx = chunk.at(instr_ptr);
+                globals.insert({ std::get<std::string>(values.at(name_idx)), name_idx });
+            } break;
+            case Instruction::GetGlobal: {
+
 
             } break;
         }

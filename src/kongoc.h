@@ -22,6 +22,7 @@ enum class Instruction {
     And         , // IfBoEq
     Or          , // Or boolean operator
     DefGlobal   , // define a global variable
+    GetGlobal   ,  
 };
 
 
