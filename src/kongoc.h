@@ -21,6 +21,7 @@ enum class Instruction {
     Not         , // IfStringEquals
     And         , // IfBoEq
     Or          , // Or boolean operator
+    DefGlobal   , // define a global variable
 };
 
 
@@ -40,4 +41,6 @@ public:
    int interp_chunk(std::vector<uint8_t> chunk); 
    size_t add_const (Value v);
    std::vector<Value> values;
+private:
+   std::unordered_map<std::string, size_t> globals;
 };

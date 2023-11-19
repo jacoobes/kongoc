@@ -37,10 +37,8 @@ size_t VM::add_const(Value v) {
 
 template <typename BinaryOp>
 inline void binary_math_op(BinaryOp fn, VM* vm) {
-    auto r = vm->values.back();
-    vm->values.pop_back();
-    auto l = vm->values.back();
-    vm->values.pop_back();
+    auto r = vm->values.back(); vm->values.pop_back();
+    auto l = vm->values.back(); vm->values.pop_back();
     if(auto lef = std::get_if<float>(&l);
        auto right = std::get_if<float>(&r)) {
        auto new_val = std::invoke(fn, *lef, *right);
@@ -107,6 +105,9 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
             case Instruction::Or:
                 // Implement as needed
                 break;
+            case Instruction::DefGlobal: {
+
+            } break;
         }
         instr_ptr += 1;
     }
