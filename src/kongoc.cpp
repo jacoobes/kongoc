@@ -31,9 +31,26 @@ enum StatusCode {
 
 
 size_t VM::add_const(Value v) {
-   values.push(v); 
+   values.push_back(v); 
    return values.size()-1;
 }
+
+template <typename BinaryOp>
+inline void binary_math_op(BinaryOp fn, VM* vm) {
+    auto r = vm->values.back();
+    vm->values.pop_back();
+    auto l = vm->values.back();
+    vm->values.pop_back();
+    if(auto lef = std::get_if<float>(&l);
+       auto right = std::get_if<float>(&r)) {
+       auto new_val = std::invoke(fn, *lef, *right);
+       vm->values.push_back(new_val);
+    } else {
+        printf("Failed to call binary op: mismatch types");
+        exit(1);
+    }
+}
+
 int VM::interp_chunk(std::vector<uint8_t> chunk){ 
     size_t instr_ptr = 0;
     while (instr_ptr < chunk.size()) {
@@ -47,27 +64,36 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
                     exit(1);
                 }
                 auto idx = chunk.at(instr_ptr);
-                
+                values.push_back(values[idx]);
             } break;
             case Instruction::Halt:
                 return Success;
-            case Instruction::Negate: {
-              values.top() = -std::get<float>(values.top());
-            } break;
+            case Instruction::Negate: 
+              if(auto top = std::get_if<float>(&values.back())) {
+                values.back() = -*top;
+              } else {
+                printf("Cannot negate non number"); 
+                exit(1);
+              } break;
             case Instruction::Not: 
+              if(auto top = std::get_if<bool>(&values.back())) {
+                values.back() = !*top;
+              } else {
+                printf("Cannot negate non number"); 
+                exit(1);
+              } break;
+            break;
+            case Instruction::Add: 
+                binary_math_op(std::plus<float>(), this);
                 break;
-
-            case Instruction::Add: {
-                break;
-            }
             case Instruction::Sub:
-                // Implement as needed
+                binary_math_op(std::minus<float>(), this);
                 break;
             case Instruction::Mul:
-                // Implement as needed
+                binary_math_op(std::multiplies<float>(), this);
                 break;
             case Instruction::Div:
-                // Implement as needed
+                binary_math_op(std::divides<float>(), this);
                 break;
             case Instruction::Mod:
                 // Implement as needed
