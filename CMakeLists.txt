@@ -13,5 +13,5 @@ file(GLOB SOURCES "src/*.cpp")
 
 # Create the executable
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
-target_include_directories(${PROJECT_NAME} PRIVATE src/)
+target_include_directories(${PROJECT_NAME} PUBLIC src/)
 add_subdirectory(test)
