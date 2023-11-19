@@ -1,4 +1,4 @@
-#include <lib.h>
+#include "kongoc.h"
 #include <cassert>
 #include <fstream>
 

@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "lib.h"
+#include "kongoc.h"
 #include <variant>
 
 TEST_CASE("Read version") {
