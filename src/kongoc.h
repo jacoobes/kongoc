@@ -5,8 +5,9 @@
 #include <functional>
 
 
-using Value = std::variant<std::nullptr_t, bool, float, std::string>;
+using Value = std::variant<bool, float>;
 
+std::ostream& operator<<(std::ostream& os, Value& value); 
 
 enum class Instruction {
     Halt        , // End execution 
@@ -40,8 +41,11 @@ public:
    VM();
    ~VM();
    int interp_chunk(std::vector<uint8_t> chunk); 
-   size_t add_const (Value v);
+   void dump(std::vector<uint8_t> chunk);
+   size_t add_value (Value v);
+   size_t add_word (std::string const& wrd);
    std::vector<Value> values;
 private:
    std::unordered_map<std::string, size_t> globals;
+   std::vector<std::string> words;
 };

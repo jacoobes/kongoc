@@ -6,10 +6,9 @@
 
 TEST_CASE("negate number") { 
     VM vm;
-    size_t f = vm.add_const(4.f);
+    size_t f = vm.add_value(4.f);
     vm.interp_chunk({ 
             static_cast<uint8_t>(Instruction::Negate),
-            static_cast<uint8_t>(f)
     });
     REQUIRE(vm.values.size() == 1);    
     REQUIRE(std::holds_alternative<float>(vm.values.back()));    
@@ -19,10 +18,9 @@ TEST_CASE("negate number") {
 
 TEST_CASE("inverse bool") { 
     VM vm;
-    size_t f = vm.add_const(false);
+    size_t f = vm.add_value(false);
     vm.interp_chunk({ 
         static_cast<uint8_t>(Instruction::Not),
-        static_cast<uint8_t>(f)
     });
     REQUIRE(vm.values.size() == 1);    
     REQUIRE(std::holds_alternative<bool>(vm.values.back()));    
@@ -32,8 +30,8 @@ TEST_CASE("inverse bool") {
 
 TEST_CASE("add") { 
     VM vm;
-    size_t right = vm.add_const(1.f);
-    size_t left = vm.add_const(2.f);
+    size_t right = vm.add_value(1.f);
+    size_t left = vm.add_value(2.f);
     vm.interp_chunk({ 
         static_cast<uint8_t>(Instruction::Add),
     });
@@ -45,8 +43,8 @@ TEST_CASE("add") {
 
 TEST_CASE("sub") { 
     VM vm;
-    size_t right = vm.add_const(1.f);
-    size_t left = vm.add_const(2.f);
+    size_t right = vm.add_value(1.f);
+    size_t left = vm.add_value(2.f);
     vm.interp_chunk({ 
         static_cast<uint8_t>(Instruction::Sub),
     });
@@ -58,8 +56,8 @@ TEST_CASE("sub") {
 
 TEST_CASE("mult") { 
     VM vm;
-    size_t right = vm.add_const(1.f);
-    size_t left = vm.add_const(2.f);
+    size_t right = vm.add_value(1.f);
+    size_t left = vm.add_value(2.f);
     vm.interp_chunk({ 
         static_cast<uint8_t>(Instruction::Mul),
     });
@@ -70,8 +68,8 @@ TEST_CASE("mult") {
 
 TEST_CASE("div") { 
     VM vm;
-    size_t right = vm.add_const(1.f);
-    size_t left = vm.add_const(2.f);
+    size_t right = vm.add_value(1.f);
+    size_t left = vm.add_value(2.f);
     vm.interp_chunk({ 
         static_cast<uint8_t>(Instruction::Div),
     });
