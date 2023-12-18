@@ -70,63 +70,63 @@ void VM::dump(std::vector<uint8_t> bytecode) {
         std::cout << v << " ";
     }
     std::cout << "\n";
-//    for (size_t i = 0; i < bytecode.size(); ++i) {
-//        Instruction instruction = static_cast<Instruction>(bytecode[i]);
-//        switch (instruction) {
-//            case Instruction::Halt:
-//                std::cout << "Halt" << std::endl;
-//                break;
-//            case Instruction::LoadConst:
-//                std::cout << "LoadConst" << std::endl;
-//                break;
-//            case Instruction::Negate:
-//                std::cout << "Negate ";
-//                std::cout << values.back();
-//                break;
-//            case Instruction::Add:
-//                std::cout << "Add" << std::endl;
-//                i+=1;
-//                break;
-//            case Instruction::Sub:
-//                std::cout << "Sub" << std::endl;
-//                i+=1;
-//                break;
-//            case Instruction::Mul:
-//                std::cout << "Mul" << std::endl;
-//                i+=2;
-//                break;
-//            case Instruction::Div:
-//                std::cout << "Div" << std::endl;
-//                i+=2;
-//                break;
-//            case Instruction::Mod:
-//                std::cout << "Mod" << std::endl;
-//                i+=2;
-//                break;
-//            case Instruction::Lte:
-//                std::cout << "Lte" << std::endl;
-//                i+=2;
-//                break;
-//            case Instruction::Not:
-//                std::cout << "Not" << std::endl;
-//                break;
-//            case Instruction::And:
-//                std::cout << "And" << std::endl;
-//                break;
-//            case Instruction::Or:
-//                std::cout << "Or" << std::endl;
-//                break;
-//            case Instruction::DefGlobal:
-//                std::cout << "DefGlobal" << std::endl;
-//                break;
-//            case Instruction::GetGlobal:
-//                std::cout << "GetGlobal" << std::endl;
-//                break;
-//            default:
-//                std::cout << "Unknown instruction" << std::endl;
-//                break;
-//        }
-//    }
+    for (size_t i = 0; i < bytecode.size(); ++i) {
+        Instruction instruction = static_cast<Instruction>(bytecode[i]);
+        switch (instruction) {
+            case Instruction::Halt:
+                std::cout << "Halt" << std::endl;
+                break;
+            case Instruction::LoadConst:
+                std::cout << "LoadConst" << std::endl;
+                break;
+            case Instruction::Negate:
+                std::cout << "Negate ";
+                std::cout << values.back();
+                break;
+            case Instruction::Add:
+                std::cout << "Add" << std::endl;
+                i+=1;
+                break;
+            case Instruction::Sub:
+                std::cout << "Sub" << std::endl;
+                i+=1;
+                break;
+            case Instruction::Mul:
+                std::cout << "Mul" << std::endl;
+                i+=1;
+                break;
+            case Instruction::Div:
+                std::cout << "Div" << std::endl;
+                i+=1;
+                break;
+            case Instruction::Mod:
+                std::cout << "Mod" << std::endl;
+                i+=1;
+                break;
+            case Instruction::Lte:
+                std::cout << "Lte" << std::endl;
+                i+=1;
+                break;
+            case Instruction::Not:
+                std::cout << "Not" << std::endl;
+                break;
+            case Instruction::And:
+                std::cout << "And" << std::endl;
+                break;
+            case Instruction::Or:
+                std::cout << "Or" << std::endl;
+                break;
+            case Instruction::DefGlobal:
+                std::cout << "DefGlobal" << std::endl;
+                break;
+            case Instruction::GetGlobal:
+                std::cout << "GetGlobal" << std::endl;
+                break;
+            default:
+                std::cout << "Unknown instruction" << std::endl;
+                break;
+        }
+    }
 }
 int VM::interp_chunk(std::vector<uint8_t> chunk){ 
     size_t instr_ptr = 0;
