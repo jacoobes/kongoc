@@ -117,6 +117,7 @@ void VM::dump(std::vector<uint8_t> bytecode) {
                 std::cout << "Or" << std::endl;
                 break;
             case Instruction::DefGlobal:
+                i+=1;
                 std::cout << "DefGlobal" << std::endl;
                 break;
             case Instruction::GetGlobal:
