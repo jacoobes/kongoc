@@ -61,6 +61,8 @@ inline void binary_math_op(BinaryOp fn, VM* vm) {
         exit(1);
     }
 }
+
+
 void VM::dump(std::vector<uint8_t> bytecode) {
     std::cout << "DUMP:\n";
     std::cout << "Values: \n";
@@ -178,20 +180,37 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
             case Instruction::Mod:
                 // Implement as needed
                 break;
-            case Instruction::Lte:
-                // Implement as needed
-                break;
+            case Instruction::Lte: {
+                auto r = values.back(); values.pop_back();
+                auto l = values.back(); values.pop_back();
+                auto rf = std::get_if<float>(&r),
+                     lf = std::get_if<float>(&l);
+                //if both are floats
+                if(rf && lf) {
+                   values.push_back(*lf <= *rf);
+                } else {
+                   values.push_back(false);
+                }
+            } break;
             case Instruction::And:
                 // Implement as needed
                 break;
-            case Instruction::Or:
-                // Implement as needed
-                break;
+            case Instruction::Or: {
+                auto r = values.back(); values.pop_back();
+                auto l = values.back(); values.pop_back();
+                auto rf = std::get_if<bool>(&r),
+                     lf = std::get_if<bool>(&l);
+                //if both are bools
+                if(rf && lf) {
+                   values.push_back(*lf || *rf);
+                } else {
+                   values.push_back(false);
+                }
+            } break;
             case Instruction::DefGlobal: {
                 instr_ptr += 1;
                 auto val_idx = chunk.at(instr_ptr);
                 globals.insert({ (words.at(val_idx)), val_idx });
-
             } break;
             case Instruction::GetGlobal: {
                 instr_ptr += 1;
