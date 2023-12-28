@@ -44,7 +44,6 @@ public:
    void dump(std::vector<uint8_t> chunk);
    size_t add_value(Value v);
    size_t add_word(std::string const& wrd);
-   uint8_t global_idx(std::string const& wrd);
    std::vector<Value> values;
 private:
    std::unordered_map<std::string, Value> globals;
