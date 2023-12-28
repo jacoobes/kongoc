@@ -53,6 +53,7 @@ uint8_t VM::global_idx(std::string const& wrd) {
         return globals.at(wrd);
     } else {
         std::cout << "Could not find global "<< wrd << "\n";
+        dump({});
         exit(1);
     }
 }
