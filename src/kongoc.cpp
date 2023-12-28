@@ -48,6 +48,15 @@ size_t VM::add_word (std::string const& wrd) {
    return words.size()-1;
 }
 
+uint8_t VM::global_idx(std::string const& wrd) {
+    if(globals.count(wrd)) {
+        return globals.at(wrd);
+    } else {
+        std::cout << "Could not find global "<< wrd << "\n";
+        exit(1);
+    }
+}
+
 template <typename BinaryOp>
 inline void binary_math_op(BinaryOp fn, VM* vm) {
     auto r = vm->values.back(); vm->values.pop_back();
