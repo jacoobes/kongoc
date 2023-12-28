@@ -65,13 +65,12 @@ inline void binary_math_op(BinaryOp fn, VM* vm) {
 
 void VM::dump(std::vector<uint8_t> bytecode) {
     std::cout << "DUMP:\n";
-    std::cout << "Values: \n";
-    std::cout << "size = " << values.size() << "\n";
+    std::cout << "Values: " << "(size="<<values.size()<<")\n";
     for(auto& v: values) {
         std::cout << "v: ";
         std::cout << v << " ";
     }
-
+    std::cout <<"\n";
     std::cout << "Globals: \n";
     for(auto& [k, v]: globals) {
         std::cout << k << ":" << v; 
