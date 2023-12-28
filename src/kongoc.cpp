@@ -138,6 +138,7 @@ void VM::dump(std::vector<uint8_t> bytecode) {
                 break;
             case Instruction::GetGlobal:
                 std::cout << "GetGlobal" << std::endl;
+                i+=1;
                 break;
             default:
                 std::cout << "Unknown instruction" << std::endl;
