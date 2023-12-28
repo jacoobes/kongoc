@@ -66,12 +66,11 @@ inline void binary_math_op(BinaryOp fn, VM* vm) {
 
 void VM::dump(std::vector<uint8_t> bytecode) {
     std::cout << "DUMP:\n";
-    std::cout << "Values: " << "(size="<<values.size()<<")\n";
+    std::cout << "Values: " << "(size="<<values.size()<<")= [";
     for(auto& v: values) {
-        std::cout << "v: ";
-        std::cout << v << " ";
+        std::cout << v << ",";
     }
-    std::cout <<"\n";
+    std::cout << " ]\n";
     std::cout << "Globals: \n";
     for(auto& [k, v]: globals) {
         std::cout << k << ":" << v; 
@@ -86,34 +85,28 @@ void VM::dump(std::vector<uint8_t> bytecode) {
                 break;
             case Instruction::LoadConst:
                 std::cout << "LoadConst" << std::endl;
+                i+=1;
                 break;
-            case Instruction::Negate:
-                std::cout << "Negate ";
-                std::cout << values.back();
-                break;
+            case Instruction::Negate: {
+                std::cout << "Negate";
+            } break;
             case Instruction::Add:
                 std::cout << "Add" << std::endl;
-                i+=1;
                 break;
             case Instruction::Sub:
                 std::cout << "Sub" << std::endl;
-                i+=1;
                 break;
             case Instruction::Mul:
                 std::cout << "Mul" << std::endl;
-                i+=1;
                 break;
             case Instruction::Div:
                 std::cout << "Div" << std::endl;
-                i+=1;
                 break;
             case Instruction::Mod:
                 std::cout << "Mod" << std::endl;
-                i+=1;
                 break;
             case Instruction::Lte:
                 std::cout << "Lte" << std::endl;
-                i+=1;
                 break;
             case Instruction::Not:
                 std::cout << "Not" << std::endl;
@@ -129,7 +122,6 @@ void VM::dump(std::vector<uint8_t> bytecode) {
                 break;
             case Instruction::GetGlobal:
                 std::cout << "GetGlobal" << std::endl;
-                i+=1;
                 break;
             default:
                 std::cout << "Unknown instruction" << std::endl;
@@ -145,12 +137,6 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
         switch (instruction) {
             case Instruction::LoadConst: {
                 instr_ptr += 1;
-                if(chunk.size() > instr_ptr) {
-                    printf("Failed to read const at index\n");
-                    exit(1);
-                }
-                auto idx = chunk.at(instr_ptr);
-                values.push_back(values[idx]);
             } break;
             case Instruction::Halt: {
                 dump(chunk);
@@ -214,8 +200,9 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
                 }
             } break;
             case Instruction::DefGlobal: {
-                globals.insert({ words.back(), values.back() });
+                auto val = values.back();
                 values.pop_back();
+                globals.insert({ words.back(), val });
             } break;
             case Instruction::GetGlobal: {
                 instr_ptr += 1;
