@@ -47,6 +47,6 @@ public:
    uint8_t global_idx(std::string const& wrd);
    std::vector<Value> values;
 private:
-   std::unordered_map<std::string, size_t> globals;
+   std::unordered_map<std::string, Value> globals;
    std::vector<std::string> words;
 };

@@ -49,8 +49,13 @@ size_t VM::add_word (std::string const& wrd) {
 }
 
 uint8_t VM::global_idx(std::string const& wrd) {
+    std::cout << "Globals: \n";
+    for(auto& [k, v]: globals) {
+        std::cout << k << ":" << v; 
+    }
 
-        return globals.at(wrd);
+
+    return globals.at(wrd);
 }
 
 template <typename BinaryOp>
@@ -129,7 +134,6 @@ void VM::dump(std::vector<uint8_t> bytecode) {
                 std::cout << "Or" << std::endl;
                 break;
             case Instruction::DefGlobal:
-                i+=1;
                 std::cout << "DefGlobal" << std::endl;
                 break;
             case Instruction::GetGlobal:
@@ -219,15 +223,13 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
                 }
             } break;
             case Instruction::DefGlobal: {
-                instr_ptr += 1;
-                auto val_idx = chunk.at(instr_ptr);
-                globals.insert({ (words.at(val_idx)), val_idx });
+                globals.insert({ words.back(), values.back() });
             } break;
             case Instruction::GetGlobal: {
                 instr_ptr += 1;
                 auto name_idx = chunk.at(instr_ptr);
                 auto word = words.at(name_idx);
-                values.push_back(values.at(globals.at(word)));
+                values.push_back(globals.at(word));
             } break;
         }
         instr_ptr += 1;
