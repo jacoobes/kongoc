@@ -215,6 +215,7 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
             } break;
             case Instruction::DefGlobal: {
                 globals.insert({ words.back(), values.back() });
+                values.pop_back();
             } break;
             case Instruction::GetGlobal: {
                 instr_ptr += 1;
