@@ -71,6 +71,12 @@ void VM::dump(std::vector<uint8_t> bytecode) {
         std::cout << "v: ";
         std::cout << v << " ";
     }
+
+    std::cout << "Globals: \n";
+    for(auto& [k, v]: globals) {
+        std::cout << k << ":" << v; 
+    }
+
     std::cout << "\n";
     for (size_t i = 0; i < bytecode.size(); ++i) {
         Instruction instruction = static_cast<Instruction>(bytecode[i]);
