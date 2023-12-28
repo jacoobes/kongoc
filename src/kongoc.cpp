@@ -49,13 +49,8 @@ size_t VM::add_word (std::string const& wrd) {
 }
 
 uint8_t VM::global_idx(std::string const& wrd) {
-    if(globals.count(wrd)) {
+
         return globals.at(wrd);
-    } else {
-        std::cout << "Could not find global "<< wrd << "\n";
-        dump({});
-        exit(1);
-    }
 }
 
 template <typename BinaryOp>
