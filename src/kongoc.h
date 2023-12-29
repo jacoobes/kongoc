@@ -41,7 +41,7 @@ public:
    VM();
    ~VM();
    int interp_chunk(std::vector<uint8_t> chunk); 
-   void dump(std::vector<uint8_t> chunk);
+   void dump(std::vector<uint8_t> chunk, std::stack<Value>& stck);
    size_t add_value(Value v);
    size_t add_word(std::string const& wrd);
    std::vector<Value> values;

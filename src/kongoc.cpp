@@ -50,13 +50,13 @@ size_t VM::add_word (std::string const& wrd) {
 
 
 template <typename BinaryOp>
-inline void binary_math_op(BinaryOp fn, VM* vm) {
-    auto r = vm->values.back(); vm->values.pop_back();
-    auto l = vm->values.back(); vm->values.pop_back();
+inline void binary_math_op(BinaryOp fn, VM* vm, std::stack<Value>& stck) {
+    auto r = stck.top(); stck.pop();
+    auto l = stck.top(); stck.pop();
     if(auto lef = std::get_if<float>(&l);
        auto right = std::get_if<float>(&r)) {
        auto new_val = std::invoke(fn, *lef, *right);
-       vm->values.push_back(new_val);
+       stck.push(new_val);
     } else {
         printf("Failed to call binary op: mismatch types");
         exit(1);
@@ -64,19 +64,25 @@ inline void binary_math_op(BinaryOp fn, VM* vm) {
 }
 
 
-void VM::dump(std::vector<uint8_t> bytecode) {
+void VM::dump(std::vector<uint8_t> bytecode, std::stack<Value>& stck) {
     std::cout << "DUMP:\n";
     std::cout << "Values: " << "(size="<<values.size()<<")= [";
     for(auto& v: values) {
         std::cout << v << ",";
     }
-    std::cout << " ]\n";
+    std::cout << "]\n";
     std::cout << "Globals: \n";
     for(auto& [k, v]: globals) {
         std::cout << k << ":" << v; 
     }
-
     std::cout << "\n";
+    std::cout << "Stack: " << "(size="<<stck.size()<<")= [";
+    while(!stck.empty()) {
+        auto v = stck.top();
+        stck.pop();
+        std::cout << v << ",";
+    }
+    std::cout << "]\n";
     for (size_t i = 0; i < bytecode.size(); ++i) {
         Instruction instruction = static_cast<Instruction>(bytecode[i]);
         switch (instruction) {
@@ -131,15 +137,17 @@ void VM::dump(std::vector<uint8_t> bytecode) {
 }
 int VM::interp_chunk(std::vector<uint8_t> chunk){ 
     size_t instr_ptr = 0;
+    auto stck = std::stack<Value>{};
     while (instr_ptr < chunk.size()) {
         uint8_t i = chunk.at(instr_ptr);
         Instruction instruction = into_instruction(i);
         switch (instruction) {
             case Instruction::LoadConst: {
                 instr_ptr += 1;
+                stck.push(values.at(chunk.at(instr_ptr)));
             } break;
             case Instruction::Halt: {
-                dump(chunk);
+                dump(chunk, stck);
                 return Success;
             } break;
             case Instruction::Negate: 
@@ -158,16 +166,16 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
               } break;
             break;
             case Instruction::Add: 
-                binary_math_op(std::plus<float>(), this);
+                binary_math_op(std::plus<float>(), this, stck);
                 break;
             case Instruction::Sub:
-                binary_math_op(std::minus<float>(), this);
+                binary_math_op(std::minus<float>(), this, stck);
                 break;
             case Instruction::Mul:
-                binary_math_op(std::multiplies<float>(), this);
+                binary_math_op(std::multiplies<float>(), this, stck);
                 break;
             case Instruction::Div:
-                binary_math_op(std::divides<float>(), this);
+                binary_math_op(std::divides<float>(), this, stck);
                 break;
             case Instruction::Mod:
                 // Implement as needed
@@ -179,9 +187,9 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
                      lf = std::get_if<float>(&l);
                 //if both are floats
                 if(rf && lf) {
-                   values.push_back(*lf <= *rf);
+                   stck.push(*lf <= *rf);
                 } else {
-                   values.push_back(false);
+                   stck.push(false);
                 }
             } break;
             case Instruction::And:
@@ -194,21 +202,20 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
                      lf = std::get_if<bool>(&l);
                 //if both are bools
                 if(rf && lf) {
-                   values.push_back(*lf || *rf);
+                   stck.push(*lf || *rf);
                 } else {
-                   values.push_back(false);
+                   stck.push(false);
                 }
             } break;
             case Instruction::DefGlobal: {
-                auto val = values.back();
-                values.pop_back();
+                auto val = stck.top(); stck.pop();
                 globals.insert({ words.back(), val });
             } break;
             case Instruction::GetGlobal: {
                 instr_ptr += 1;
                 auto name_idx = chunk.at(instr_ptr);
                 auto word = words.at(name_idx);
-                values.push_back(globals.at(word));
+                stck.push(globals.at(word));
             } break;
         }
         instr_ptr += 1;
