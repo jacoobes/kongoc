@@ -50,13 +50,13 @@ size_t VM::add_word (std::string const& wrd) {
 
 
 template <typename BinaryOp>
-inline void binary_math_op(BinaryOp fn, VM* vm, std::stack<Value>& stck) {
-    auto r = stck.top(); stck.pop();
-    auto l = stck.top(); stck.pop();
+inline void binary_math_op(BinaryOp fn, VM* vm) {
+    auto r = vm->stck.top(); vm->stck.pop();
+    auto l = vm->stck.top(); vm->stck.pop();
     if(auto lef = std::get_if<float>(&l);
        auto right = std::get_if<float>(&r)) {
        auto new_val = std::invoke(fn, *lef, *right);
-       stck.push(new_val);
+       vm->stck.push(new_val);
     } else {
         printf("Failed to call binary op: mismatch types");
         exit(1);
@@ -64,7 +64,7 @@ inline void binary_math_op(BinaryOp fn, VM* vm, std::stack<Value>& stck) {
 }
 
 
-void VM::dump(std::vector<uint8_t> bytecode, std::stack<Value>& stck) {
+void VM::dump(std::vector<uint8_t> bytecode) {
     std::cout << "DUMP:\n";
     std::cout << "Values: " << "(size="<<values.size()<<")= [";
     for(auto& v: values) {
@@ -137,7 +137,6 @@ void VM::dump(std::vector<uint8_t> bytecode, std::stack<Value>& stck) {
 }
 int VM::interp_chunk(std::vector<uint8_t> chunk){ 
     size_t instr_ptr = 0;
-    auto stck = std::stack<Value>{};
     while (instr_ptr < chunk.size()) {
         uint8_t i = chunk.at(instr_ptr);
         Instruction instruction = into_instruction(i);
@@ -147,35 +146,37 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
                 stck.push(values.at(chunk.at(instr_ptr)));
             } break;
             case Instruction::Halt: {
-                dump(chunk, stck);
+                dump(chunk);
                 return Success;
             } break;
             case Instruction::Negate: 
-              if(auto top = std::get_if<float>(&values.back())) {
-                values.back() = -*top;
+              if(auto top = std::get_if<float>(&stck.top())) {
+                  stck.push(-*top);
+                  stck.pop();
               } else {
                 printf("Cannot negate non number"); 
                 exit(1);
               } break;
             case Instruction::Not: 
-              if(auto top = std::get_if<bool>(&values.back())) {
-                values.back() = !*top;
+              if(auto top = std::get_if<bool>(&stck.top())) {
+                  stck.push(!*top);
+                  stck.pop();
               } else {
                 printf("Cannot negate non number"); 
                 exit(1);
               } break;
             break;
             case Instruction::Add: 
-                binary_math_op(std::plus<float>(), this, stck);
+                binary_math_op(std::plus<float>(), this);
                 break;
             case Instruction::Sub:
-                binary_math_op(std::minus<float>(), this, stck);
+                binary_math_op(std::minus<float>(), this);
                 break;
             case Instruction::Mul:
-                binary_math_op(std::multiplies<float>(), this, stck);
+                binary_math_op(std::multiplies<float>(), this);
                 break;
             case Instruction::Div:
-                binary_math_op(std::divides<float>(), this, stck);
+                binary_math_op(std::divides<float>(), this);
                 break;
             case Instruction::Mod:
                 // Implement as needed
@@ -196,8 +197,8 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
                 // Implement as needed
                 break;
             case Instruction::Or: {
-                auto r = values.back(); values.pop_back();
-                auto l = values.back(); values.pop_back();
+                auto r = stck.top(); stck.pop();
+                auto l = stck.top(); stck.pop();
                 auto rf = std::get_if<bool>(&r),
                      lf = std::get_if<bool>(&l);
                 //if both are bools
@@ -209,6 +210,7 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
             } break;
             case Instruction::DefGlobal: {
                 auto val = stck.top(); stck.pop();
+                //todo fix:
                 globals.insert({ words.back(), val });
             } break;
             case Instruction::GetGlobal: {

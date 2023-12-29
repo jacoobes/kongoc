@@ -41,10 +41,11 @@ public:
    VM();
    ~VM();
    int interp_chunk(std::vector<uint8_t> chunk); 
-   void dump(std::vector<uint8_t> chunk, std::stack<Value>& stck);
+   void dump(std::vector<uint8_t> chunk);
    size_t add_value(Value v);
    size_t add_word(std::string const& wrd);
    std::vector<Value> values;
+   std::stack<Value> stck;
 private:
    std::unordered_map<std::string, Value> globals;
    std::vector<std::string> words;
