@@ -11,8 +11,8 @@ TEST_CASE("negate number") {
             static_cast<uint8_t>(Instruction::Negate),
     });
     REQUIRE(vm.values.size() == 1);    
-    REQUIRE(std::holds_alternative<float>(vm.values.back()));    
-    REQUIRE(std::get<float>(vm.values.back()) == -4.f);    
+    REQUIRE(std::holds_alternative<float>(vm.stck.top()));    
+    REQUIRE(std::get<float>(vm.stck.top()) == -4.f);    
 }
 
 
@@ -23,8 +23,8 @@ TEST_CASE("inverse bool") {
         static_cast<uint8_t>(Instruction::Not),
     });
     REQUIRE(vm.values.size() == 1);    
-    REQUIRE(std::holds_alternative<bool>(vm.values.back()));    
-    REQUIRE(std::get<bool>(vm.values.back()) == true);    
+    REQUIRE(std::holds_alternative<bool>(vm.stck.top()));    
+    REQUIRE(std::get<bool>(vm.stck.top()) == true);    
 }
 
 
@@ -36,8 +36,8 @@ TEST_CASE("add") {
         static_cast<uint8_t>(Instruction::Add),
     });
     REQUIRE(vm.values.size() == 1);    
-    REQUIRE(std::holds_alternative<float>(vm.values.back()));    
-    REQUIRE(std::get<float>(vm.values.back()) == 3.f);    
+    REQUIRE(std::holds_alternative<float>(vm.stck.top()));    
+    REQUIRE(std::get<float>(vm.stck.top()) == 3.f);    
 }
 
 
@@ -49,8 +49,8 @@ TEST_CASE("sub") {
         static_cast<uint8_t>(Instruction::Sub),
     });
     REQUIRE(vm.values.size() == 1);    
-    REQUIRE(std::holds_alternative<float>(vm.values.back()));    
-    REQUIRE(std::get<float>(vm.values.back()) == -1.f);    
+    REQUIRE(std::holds_alternative<float>(vm.stck.top()));    
+    REQUIRE(std::get<float>(vm.stck.top()) == -1.f);    
 }
 
 
@@ -62,8 +62,8 @@ TEST_CASE("mult") {
         static_cast<uint8_t>(Instruction::Mul),
     });
     REQUIRE(vm.values.size() == 1);    
-    REQUIRE(std::holds_alternative<float>(vm.values.back()));    
-    REQUIRE(std::get<float>(vm.values.back()) == 2.f);    
+    REQUIRE(std::holds_alternative<float>(vm.stck.top()));    
+    REQUIRE(std::get<float>(vm.stck.top()) == 2.f);    
 }
 
 TEST_CASE("div") { 
@@ -74,6 +74,16 @@ TEST_CASE("div") {
         static_cast<uint8_t>(Instruction::Div),
     });
     REQUIRE(vm.values.size() == 1);    
-    REQUIRE(std::holds_alternative<float>(vm.values.back()));    
-    REQUIRE(std::get<float>(vm.values.back()) == 0.5f);    
+    REQUIRE(std::holds_alternative<float>(vm.stck.top()));    
+    REQUIRE(std::get<float>(vm.stck.top()) == 0.5f);    
+}
+
+TEST_CASE("alloc string") { 
+    VM vm;
+    auto heap_str = new HeapString{.length=4};
+    heap_str->chars=strdup("deez");
+    size_t right = vm.add_value(heap_str);    
+    REQUIRE(vm.values.size() == 1);    
+    REQUIRE(std::holds_alternative<HeapString*>(vm.stck.top()));    
+    REQUIRE(strcmp(std::get<HeapString*>(vm.stck.top())->chars, "deez"));    
 }

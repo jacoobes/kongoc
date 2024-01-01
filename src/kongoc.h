@@ -1,29 +1,41 @@
+#include <forward_list>
 #include <stack>
 #include <vector>
 #include <string>
 #include <variant>
 #include <functional>
 
+enum class OTag {
+    String,
+    Custom
+};
 
-using Value = std::variant<bool, float>;
+
+struct HeapString {
+    size_t length;
+    char* chars;
+};
+
+using Value = std::variant<bool, float, HeapString*>;
 
 std::ostream& operator<<(std::ostream& os, Value& value); 
 
 enum class Instruction {
     Halt        , // End execution 
-    LoadConst   , // load constant
+    LoadConst   , // load constant  1 operand
     Negate      , // negate a number
     Add         , // add two values
     Sub         , // subtract two numbers
     Mul         , // multiply two numbers
     Div         , // divide two numbers
     Mod         , // modulus two numbers
-    Lte,
+    Lte         , 
     Not         , // IfStringEquals
     And         , // IfBoEq
     Or          , // Or boolean operator
     DefGlobal   , // define a global variable
-    GetGlobal   ,  
+    GetGlobal   , //  1 operaand
+    JmpIfFalse         , // 2 operands
 };
 
 
@@ -49,4 +61,5 @@ public:
 private:
    std::unordered_map<std::string, Value> globals;
    std::vector<std::string> words;
+   std::forward_list<HeapString*> objs;
 };

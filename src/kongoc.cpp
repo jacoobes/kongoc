@@ -8,14 +8,14 @@ std::ostream & operator<<(std::ostream& os, Value& value) {
     if(std::holds_alternative<float>(value)) {
         std::cout << std::get<float>(value);
     } else if (std::holds_alternative<bool>(value)) {
-        std::cout << std::get<bool>(value);
+        std::cout << std::get<bool>(value) ? "true" : "false";
+    } else if(std::holds_alternative<HeapString*>(value)) {
+        std::cout << "\"" << std::get<HeapString*>(value)->chars << "\"";
     }
     return os;
 }
 
-BytecodeFile::BytecodeFile(std::vector<uint8_t> bytecode) {
-
-}
+BytecodeFile::BytecodeFile(std::vector<uint8_t> bytecode) {}
 
 Instruction into_instruction(uint8_t bc) {
     assert(bc <= 13 && bc >= 0);
@@ -28,7 +28,10 @@ VM::VM() {
 }
 
 VM::~VM() {
-
+    for (auto it = objs.begin(); it != objs.end(); ++it) {
+        delete *it;
+        //it = objs.erase_after(it);  
+    }
 }
 
 enum StatusCode {
@@ -38,6 +41,9 @@ enum StatusCode {
 
 
 size_t VM::add_value(Value v) {
+   if(auto obj = std::get_if<HeapString*>(&v)){
+      objs.push_front(*obj);
+   }
    values.push_back(v); 
    return values.size()-1;
 }
@@ -73,7 +79,7 @@ void VM::dump(std::vector<uint8_t> bytecode) {
     std::cout << "]\n";
     std::cout << "Globals: \n";
     for(auto& [k, v]: globals) {
-        std::cout << k << ":" << v; 
+        std::cout << k << ":" << v << ", "; 
     }
     std::cout << "\n";
     std::cout << "Stack: " << "(size="<<stck.size()<<")= [";
@@ -90,8 +96,7 @@ void VM::dump(std::vector<uint8_t> bytecode) {
                 std::cout << "Halt" << std::endl;
                 break;
             case Instruction::LoadConst:
-                std::cout << "LoadConst" << std::endl;
-                i+=1;
+                std::cout << "LoadConst  " << values.at(bytecode[++i]) << std::endl;
                 break;
             case Instruction::Negate: {
                 std::cout << "Negate";
@@ -128,7 +133,12 @@ void VM::dump(std::vector<uint8_t> bytecode) {
                 break;
             case Instruction::GetGlobal:
                 std::cout << "GetGlobal" << std::endl;
+                i++;
                 break;
+            case Instruction::JmpIfFalse: {
+                std::cout << "JmpIfFalse" << std::endl;
+                i += 2;
+            } break;
             default:
                 std::cout << "Unknown instruction" << std::endl;
                 break;
@@ -151,18 +161,18 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
             } break;
             case Instruction::Negate: 
               if(auto top = std::get_if<float>(&stck.top())) {
-                  stck.push(-*top);
                   stck.pop();
+                  stck.push(-*top);
               } else {
                 printf("Cannot negate non number"); 
                 exit(1);
               } break;
             case Instruction::Not: 
               if(auto top = std::get_if<bool>(&stck.top())) {
-                  stck.push(!*top);
                   stck.pop();
+                  stck.push(!*top);
               } else {
-                printf("Cannot negate non number"); 
+                printf("Cannot negate boolean"); 
                 exit(1);
               } break;
             break;
@@ -182,8 +192,8 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
                 // Implement as needed
                 break;
             case Instruction::Lte: {
-                auto r = values.back(); values.pop_back();
-                auto l = values.back(); values.pop_back();
+                auto r = stck.top(); stck.pop();
+                auto l = stck.top(); stck.pop();
                 auto rf = std::get_if<float>(&r),
                      lf = std::get_if<float>(&l);
                 //if both are floats
@@ -193,9 +203,18 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
                    stck.push(false);
                 }
             } break;
-            case Instruction::And:
-                // Implement as needed
-                break;
+            case Instruction::And: {
+                auto r = stck.top(); stck.pop();
+                auto l = stck.top(); stck.pop();
+                auto rf = std::get_if<bool>(&r),
+                     lf = std::get_if<bool>(&l);
+                //if both are bools
+                if(rf && lf) {
+                   stck.push(*lf && *rf);
+                } else {
+                   stck.push(false);
+                }
+            } break;
             case Instruction::Or: {
                 auto r = stck.top(); stck.pop();
                 auto l = stck.top(); stck.pop();
@@ -210,7 +229,7 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
             } break;
             case Instruction::DefGlobal: {
                 auto val = stck.top(); stck.pop();
-                //todo fix:
+                //todo fix: word location
                 globals.insert({ words.back(), val });
             } break;
             case Instruction::GetGlobal: {
@@ -218,6 +237,11 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
                 auto name_idx = chunk.at(instr_ptr);
                 auto word = words.at(name_idx);
                 stck.push(globals.at(word));
+            } break;
+            case Instruction::JmpIfFalse: {
+                instr_ptr += 2;
+                unsigned short jmp_offset = 
+                    chunk.at(instr_ptr-2) | chunk.at(instr_ptr-1);
             } break;
         }
         instr_ptr += 1;
