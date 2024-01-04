@@ -1,14 +1,17 @@
 #include "kongoc.h"
 #include <cassert>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <stdint.h>
+#include <vcruntime.h>
 
 
 std::ostream & operator<<(std::ostream& os, Value& value) {
     if(std::holds_alternative<float>(value)) {
         std::cout << std::get<float>(value);
     } else if (std::holds_alternative<bool>(value)) {
-        std::cout << std::get<bool>(value) ? "true" : "false";
+        std::cout << (std::get<bool>(value) ? "true" : "false");
     } else if(std::holds_alternative<HeapString*>(value)) {
         std::cout << "\"" << std::get<HeapString*>(value)->chars << "\"";
     }
@@ -18,7 +21,7 @@ std::ostream & operator<<(std::ostream& os, Value& value) {
 BytecodeFile::BytecodeFile(std::vector<uint8_t> bytecode) {}
 
 Instruction into_instruction(uint8_t bc) {
-    assert(bc <= 13 && bc >= 0);
+    assert(bc <= 15 && bc >= 0);
     return static_cast<Instruction>(bc);
 }
 
@@ -69,6 +72,9 @@ inline void binary_math_op(BinaryOp fn, VM* vm) {
     }
 }
 
+inline unsigned short parse_ushort (std::vector<uint8_t>& chunk, size_t location) {
+    return (chunk[location-1] << 8) | chunk[location];
+}
 
 void VM::dump(std::vector<uint8_t> bytecode) {
     std::cout << "DUMP:\n";
@@ -89,15 +95,23 @@ void VM::dump(std::vector<uint8_t> bytecode) {
         std::cout << v << ",";
     }
     std::cout << "]\n";
-    for (size_t i = 0; i < bytecode.size(); ++i) {
-        Instruction instruction = static_cast<Instruction>(bytecode[i]);
+
+    size_t instr_ptr = 0;
+    while(instr_ptr < bytecode.size()) {
+
+        Instruction instruction = static_cast<Instruction>(bytecode[instr_ptr]);
+        std::cout << std::setw(2) << instr_ptr << " ";
         switch (instruction) {
             case Instruction::Halt:
                 std::cout << "Halt" << std::endl;
                 break;
-            case Instruction::LoadConst:
-                std::cout << "LoadConst  " << values.at(bytecode[++i]) << std::endl;
-                break;
+            case Instruction::LoadConst: {
+                instr_ptr+=1;
+                std::cout << "LoadConst  " 
+                    << instr_ptr << " "
+                    << values.at(bytecode[instr_ptr]) 
+                    << std::endl;
+            } break;
             case Instruction::Negate: {
                 std::cout << "Negate";
             } break;
@@ -129,22 +143,34 @@ void VM::dump(std::vector<uint8_t> bytecode) {
                 std::cout << "Or" << std::endl;
                 break;
             case Instruction::DefGlobal:
-                std::cout << "DefGlobal" << std::endl;
+                std::cout << "DefGlobal " << ++instr_ptr << std::endl;
                 break;
             case Instruction::GetGlobal:
-                std::cout << "GetGlobal" << std::endl;
-                i++;
+                std::cout << "GetGlobal " << ++instr_ptr << std::endl;
                 break;
             case Instruction::JmpIfFalse: {
-                std::cout << "JmpIfFalse" << std::endl;
-                i += 2;
+                instr_ptr += 2;
+                std::cout << "JmpIfFalse"<< "[" << instr_ptr-1 << "," << instr_ptr << "]";
+                auto jump = parse_ushort(bytecode, instr_ptr);
+                std::cout << " " << jump+instr_ptr << "\n";
+            } break;
+            case Instruction::Jmp: {
+                instr_ptr += 2;
+                std::cout << "Jmp" << "[" << instr_ptr-1 << "," << instr_ptr << "]";
+                auto jump = parse_ushort(bytecode, instr_ptr);
+                std::cout << " " << jump+instr_ptr << "\n";
+                //instr_ptr += jump;
             } break;
             default:
-                std::cout << "Unknown instruction" << std::endl;
+                std::cout << "Unknown instruction " << instr_ptr << std::endl;
                 break;
         }
+        instr_ptr += 1;
     }
 }
+
+
+
 int VM::interp_chunk(std::vector<uint8_t> chunk){ 
     size_t instr_ptr = 0;
     while (instr_ptr < chunk.size()) {
@@ -228,9 +254,11 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
                 }
             } break;
             case Instruction::DefGlobal: {
+                instr_ptr += 1;
+                auto word = words.at(chunk.at(instr_ptr));
                 auto val = stck.top(); stck.pop();
                 //todo fix: word location
-                globals.insert({ words.back(), val });
+                globals.insert({ word, val });
             } break;
             case Instruction::GetGlobal: {
                 instr_ptr += 1;
@@ -240,9 +268,19 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
             } break;
             case Instruction::JmpIfFalse: {
                 instr_ptr += 2;
-                unsigned short jmp_offset = 
-                    chunk.at(instr_ptr-2) | chunk.at(instr_ptr-1);
+                auto jump = parse_ushort(chunk, instr_ptr);
+                auto val = stck.top(); stck.pop();
+                if(auto b = std::get_if<bool>(&val)) {
+                   if(!*b) { 
+                       instr_ptr+=jump; 
+                   }
+                }
             } break;
+            case Instruction::Jmp: {
+                instr_ptr += 2;
+                auto jump = parse_ushort(chunk, instr_ptr);
+                instr_ptr += jump;
+            }
         }
         instr_ptr += 1;
     }

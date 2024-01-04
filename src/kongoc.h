@@ -35,7 +35,8 @@ enum class Instruction {
     Or          , // Or boolean operator
     DefGlobal   , // define a global variable
     GetGlobal   , //  1 operaand
-    JmpIfFalse         , // 2 operands
+    JmpIfFalse  , // 1 operands, 2 bytes
+    Jmp         , // 1 operand, 2 bytes
 };
 
 
@@ -58,8 +59,8 @@ public:
    size_t add_word(std::string const& wrd);
    std::vector<Value> values;
    std::stack<Value> stck;
+   std::vector<std::string> words;
 private:
    std::unordered_map<std::string, Value> globals;
-   std::vector<std::string> words;
    std::forward_list<HeapString*> objs;
 };
