@@ -3,7 +3,7 @@
 #include <variant>
 
 
-
+//Tests broken atm due to change in how instructions work.
 TEST_CASE("negate number") { 
     VM vm;
     size_t f = vm.add_value(4.f);
@@ -80,10 +80,9 @@ TEST_CASE("div") {
 
 TEST_CASE("alloc string") { 
     VM vm;
-    auto heap_str = new HeapString{.length=4};
-    heap_str->chars=strdup("deez");
+    auto heap_str = new KString{.length=4, .chars=_strdup("deez")};
     size_t right = vm.add_value(heap_str);    
     REQUIRE(vm.values.size() == 1);    
-    REQUIRE(std::holds_alternative<HeapString*>(vm.stck.top()));    
-    REQUIRE(strcmp(std::get<HeapString*>(vm.stck.top())->chars, "deez"));    
+    REQUIRE(std::holds_alternative<HeapObj*>(vm.stck.top()));    
+    REQUIRE(strcmp(static_cast<KString*>(std::get<HeapObj*>(vm.stck.top())) ->chars, "deez"));    
 }

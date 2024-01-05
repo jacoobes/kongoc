@@ -10,13 +10,19 @@ enum class OTag {
     Custom
 };
 
+class HeapObj{};
 
-struct HeapString {
+class KString: public HeapObj {
+public:
     size_t length;
     char* chars;
 };
 
-using Value = std::variant<bool, float, HeapString*>;
+class KFunction: public HeapObj {
+
+};
+
+using Value = std::variant<bool, float, HeapObj*>;
 
 std::ostream& operator<<(std::ostream& os, Value& value); 
 
@@ -62,5 +68,5 @@ public:
    std::vector<std::string> words;
 private:
    std::unordered_map<std::string, Value> globals;
-   std::forward_list<HeapString*> objs;
+   std::forward_list<HeapObj*> objs;
 };

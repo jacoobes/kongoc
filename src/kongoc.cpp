@@ -6,14 +6,18 @@
 #include <stdint.h>
 #include <vcruntime.h>
 
+template<typename Base, typename T>
+inline bool instanceof(const T*) {
+    return std::is_base_of<Base, T>::value;
+}
 
 std::ostream & operator<<(std::ostream& os, Value& value) {
     if(std::holds_alternative<float>(value)) {
         std::cout << std::get<float>(value);
     } else if (std::holds_alternative<bool>(value)) {
         std::cout << (std::get<bool>(value) ? "true" : "false");
-    } else if(std::holds_alternative<HeapString*>(value)) {
-        std::cout << "\"" << std::get<HeapString*>(value)->chars << "\"";
+    } else if(auto hobj = std::get_if<HeapObj*>(&value)) {
+        std::cout << "KHeapObj{}"; 
     }
     return os;
 }
@@ -25,10 +29,7 @@ Instruction into_instruction(uint8_t bc) {
     return static_cast<Instruction>(bc);
 }
 
-
-VM::VM() {
-
-}
+VM::VM() {}
 
 VM::~VM() {
     for (auto it = objs.begin(); it != objs.end(); ++it) {
@@ -44,7 +45,7 @@ enum StatusCode {
 
 
 size_t VM::add_value(Value v) {
-   if(auto obj = std::get_if<HeapString*>(&v)){
+   if(auto obj = std::get_if<HeapObj*>(&v)){
       objs.push_front(*obj);
    }
    values.push_back(v); 
