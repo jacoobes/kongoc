@@ -80,9 +80,9 @@ TEST_CASE("div") {
 
 TEST_CASE("alloc string") { 
     VM vm;
-    auto heap_str = new KString{.length=4, .chars=_strdup("deez")};
+    auto heap_str = new KString("deez");
     size_t right = vm.add_value(heap_str);    
     REQUIRE(vm.values.size() == 1);    
     REQUIRE(std::holds_alternative<HeapObj*>(vm.stck.top()));    
-    REQUIRE(strcmp(static_cast<KString*>(std::get<HeapObj*>(vm.stck.top())) ->chars, "deez"));    
+    REQUIRE(strcmp(static_cast<KString*>(std::get<HeapObj*>(vm.stck.top()))->chars(), "deez"));    
 }

@@ -1,6 +1,7 @@
 #include "kongoc.h"
 #include <cassert>
 #include <fstream>
+#include <sstream>
 #include <iomanip>
 #include <iostream>
 #include <stdint.h>
@@ -17,11 +18,39 @@ std::ostream & operator<<(std::ostream& os, Value& value) {
     } else if (std::holds_alternative<bool>(value)) {
         std::cout << (std::get<bool>(value) ? "true" : "false");
     } else if(auto hobj = std::get_if<HeapObj*>(&value)) {
-        std::cout << "KHeapObj{}"; 
     }
     return os;
 }
+HeapObj::~HeapObj(){};
 
+KString::KString(const std::string& str) {
+    __internal = new std::string(std::move(str));
+}
+KString::~KString() {
+    delete __internal;
+}
+std::string KString::to_string() {
+    return *__internal;
+}
+
+const char* KString::chars() {
+    return __internal->c_str();
+}
+
+size_t KString::length() {
+    return __internal->size();
+}
+
+std::string KFunction::to_string() {
+    std::stringstream ss{};
+    ss << "(" 
+       << (name == nullptr ? "<anonymous>" : *name)
+       << arity << ")";
+    return ss.str();
+}
+KFunction::~KFunction() {
+    delete name;
+}
 BytecodeFile::BytecodeFile(std::vector<uint8_t> bytecode) {}
 
 Instruction into_instruction(uint8_t bc) {
@@ -162,6 +191,9 @@ void VM::dump(std::vector<uint8_t> bytecode) {
                 std::cout << " " << jump+instr_ptr << "\n";
                 //instr_ptr += jump;
             } break;
+            case Instruction::Pop: {
+                 std::cout << "Pop";
+            } break;
             default:
                 std::cout << "Unknown instruction " << instr_ptr << std::endl;
                 break;
@@ -282,6 +314,9 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
                 auto jump = parse_ushort(chunk, instr_ptr);
                 instr_ptr += jump;
             }
+            case Instruction::Pop: {
+                stck.pop();
+            } break;
         }
         instr_ptr += 1;
     }

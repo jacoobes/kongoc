@@ -10,16 +10,29 @@ enum class OTag {
     Custom
 };
 
-class HeapObj{};
+class HeapObj{
+public:
+    virtual std::string to_string() = 0;
+    virtual ~HeapObj() = 0;
+};
 
 class KString: public HeapObj {
+private: 
+    std::string* __internal;
 public:
-    size_t length;
-    char* chars;
+    KString(const std::string& str);
+    ~KString() override;
+    std::string to_string() override;
+    size_t length();
+    const char* chars();
 };
 
 class KFunction: public HeapObj {
-
+public:
+    int arity;
+    ~KFunction() override;
+    std::string* name = nullptr;
+    std::string to_string() override;
 };
 
 using Value = std::variant<bool, float, HeapObj*>;
@@ -43,6 +56,7 @@ enum class Instruction {
     GetGlobal   , //  1 operaand
     JmpIfFalse  , // 1 operands, 2 bytes
     Jmp         , // 1 operand, 2 bytes
+    Pop         , // Pop one value off the stack.
 };
 
 
