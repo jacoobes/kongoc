@@ -1,6 +1,8 @@
 #include <forward_list>
 #include <stack>
+#include <stdint.h>
 #include <vector>
+#include <array>
 #include <string>
 #include <variant>
 #include <functional>
@@ -53,20 +55,16 @@ enum class Instruction {
     And         , // IfBoEq
     Or          , // Or boolean operator
     DefGlobal   , // define a global variable
-    GetGlobal   , //  1 operaand
+    GetGlobal   , //  1 operand
+    DefLocal    ,
+    GetLocal    ,
     JmpIfFalse  , // 1 operands, 2 bytes
     Jmp         , // 1 operand, 2 bytes
     Pop         , // Pop one value off the stack.
+    Pop_N_Local , // Pop 1-255 elements off the local registers
 };
 
 
-
-struct BytecodeFile {
-    BytecodeFile(std::vector<uint8_t>);
-    std::vector<Value> consts;
-    std::vector<uint8_t> bytecode;
-    std::string version;
-};
 
 
 class VM {
@@ -76,11 +74,13 @@ public:
    int interp_chunk(std::vector<uint8_t> chunk); 
    void dump(std::vector<uint8_t> chunk);
    size_t add_value(Value v);
-   size_t add_word(std::string const& wrd);
+   size_t add_word(std::string const&);
+   //size_t add_local(Local);
    std::vector<Value> values;
    std::stack<Value> stck;
    std::vector<std::string> words;
 private:
    std::unordered_map<std::string, Value> globals;
+   std::vector<Value> locals;
    std::forward_list<HeapObj*> objs;
 };

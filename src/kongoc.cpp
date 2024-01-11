@@ -14,10 +14,11 @@ inline bool instanceof(const T*) {
 
 std::ostream & operator<<(std::ostream& os, Value& value) {
     if(std::holds_alternative<float>(value)) {
-        std::cout << std::get<float>(value);
+        os << std::get<float>(value);
     } else if (std::holds_alternative<bool>(value)) {
-        std::cout << (std::get<bool>(value) ? "true" : "false");
+        os << (std::get<bool>(value) ? "true" : "false");
     } else if(auto hobj = std::get_if<HeapObj*>(&value)) {
+        os << (*hobj)->to_string();
     }
     return os;
 }
@@ -44,19 +45,20 @@ size_t KString::length() {
 std::string KFunction::to_string() {
     std::stringstream ss{};
     ss << "(" 
-       << (name == nullptr ? "<anonymous>" : *name)
-       << arity << ")";
+       << (name == nullptr ? "<anonymous>" : *name) 
+       << " " << arity << ")";
     return ss.str();
 }
+
 KFunction::~KFunction() {
     delete name;
 }
-BytecodeFile::BytecodeFile(std::vector<uint8_t> bytecode) {}
 
 Instruction into_instruction(uint8_t bc) {
-    assert(bc <= 15 && bc >= 0);
+    assert(bc <= 19 && bc >= 0);
     return static_cast<Instruction>(bc);
 }
+
 
 VM::VM() {}
 
@@ -66,6 +68,7 @@ VM::~VM() {
         //it = objs.erase_after(it);  
     }
 }
+
 
 enum StatusCode {
   Success,
@@ -128,7 +131,6 @@ void VM::dump(std::vector<uint8_t> bytecode) {
 
     size_t instr_ptr = 0;
     while(instr_ptr < bytecode.size()) {
-
         Instruction instruction = static_cast<Instruction>(bytecode[instr_ptr]);
         std::cout << std::setw(2) << instr_ptr << " ";
         switch (instruction) {
@@ -194,6 +196,16 @@ void VM::dump(std::vector<uint8_t> bytecode) {
             case Instruction::Pop: {
                  std::cout << "Pop";
             } break;
+            case Instruction::DefLocal: {
+                std::cout << "DefLocal "  << std::endl;
+            } break;
+            case Instruction::GetLocal: {
+                std::cout << "GetLocal " << ++instr_ptr << std::endl;
+            } break;
+            case Instruction::Pop_N_Local: {
+                std::cout << "Pop_N_Local " << ++instr_ptr << std::endl;
+            } break;
+
             default:
                 std::cout << "Unknown instruction " << instr_ptr << std::endl;
                 break;
@@ -251,10 +263,10 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
                 // Implement as needed
                 break;
             case Instruction::Lte: {
-                auto r = stck.top(); stck.pop();
-                auto l = stck.top(); stck.pop();
-                auto rf = std::get_if<float>(&r),
-                     lf = std::get_if<float>(&l);
+                auto rf = std::get_if<float>(&stck.top()),
+                     lf = std::get_if<float>(&stck.top());
+                stck.pop();
+                stck.pop();
                 //if both are floats
                 if(rf && lf) {
                    stck.push(*lf <= *rf);
@@ -313,9 +325,25 @@ int VM::interp_chunk(std::vector<uint8_t> chunk){
                 instr_ptr += 2;
                 auto jump = parse_ushort(chunk, instr_ptr);
                 instr_ptr += jump;
-            }
+            } break;
             case Instruction::Pop: {
                 stck.pop();
+            } break;
+            case Instruction::DefLocal: {
+                auto val = stck.top(); stck.pop();
+                locals.push_back(val);
+            } break;
+            case Instruction::GetLocal: {
+                instr_ptr += 1;
+                stck.push(locals[chunk.at(instr_ptr)]);
+            } break;
+            case Instruction::Pop_N_Local: {
+                instr_ptr += 1;
+                auto n = chunk.at(instr_ptr);
+                for(int i = 0; i < n; i++) {
+                    locals.pop_back();
+                }
+                assert(n > 0);
             } break;
         }
         instr_ptr += 1;
