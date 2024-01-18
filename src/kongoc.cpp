@@ -5,7 +5,6 @@
 #include <iomanip>
 #include <iostream>
 #include <stdint.h>
-#include <vcruntime.h>
 
 template<typename Base, typename T>
 inline bool instanceof(const T*) {
