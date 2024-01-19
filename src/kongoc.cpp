@@ -21,6 +21,7 @@ std::ostream & operator<<(std::ostream& os, Value& value) {
     }
     return os;
 }
+
 HeapObj::~HeapObj(){};
 
 KString::KString(const std::string& str) {

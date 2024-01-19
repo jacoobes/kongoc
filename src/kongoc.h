@@ -31,10 +31,10 @@ public:
 
 class KFunction: public HeapObj {
 public:
-    int arity;
+    int arity{};
     ~KFunction() override;
-    std::string* name = nullptr;
     std::string to_string() override;
+    std::string* name = nullptr;
 };
 
 using Value = std::variant<bool, float, HeapObj*>;
