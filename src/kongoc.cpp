@@ -6,10 +6,6 @@
 #include <iostream>
 #include <stdint.h>
 
-template<typename Base, typename T>
-inline bool instanceof(const T*) {
-    return std::is_base_of<Base, T>::value;
-}
 
 std::ostream & operator<<(std::ostream& os, Value& value) {
     if(std::holds_alternative<float>(value)) {
@@ -60,12 +56,25 @@ Instruction into_instruction(uint8_t bc) {
 }
 
 
+
+//void return_from_stack(std::stack<std::vector<uint8_t>> callstack, std::vector<uint8_t> bytecode) {
+//    auto top = callstack.top();
+//    if(top.empty()) {
+//    } else {
+//    }
+//    callstack.pop(); 
+//}
+//
+//void add_to_stack(std::stack<std::vector<uint8_t>> callstack, std::vector<uint8_t> bytecode) {
+//    callstack.push(bytecode);
+//}
+
+
 VM::VM() {}
 
 VM::~VM() {
     for (auto it = objs.begin(); it != objs.end(); ++it) {
         delete *it;
-        //it = objs.erase_after(it);  
     }
 }
 
@@ -77,11 +86,11 @@ enum StatusCode {
 
 
 size_t VM::add_value(Value v) {
-   if(auto obj = std::get_if<HeapObj*>(&v)){
-      objs.push_front(*obj);
-   }
-   values.push_back(v); 
-   return values.size()-1;
+    if(auto obj = std::get_if<HeapObj*>(&v)){
+        objs.push_front(*obj);
+    }
+    values.push_back(v);
+    return values.size()-1;
 }
 
 
@@ -213,8 +222,6 @@ void VM::dump(std::vector<uint8_t> bytecode) {
         instr_ptr += 1;
     }
 }
-
-
 
 int VM::interp_chunk(std::vector<uint8_t> chunk){ 
     size_t instr_ptr = 0;
