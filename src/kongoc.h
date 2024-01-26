@@ -37,8 +37,9 @@ class KFunction: public HeapObj {
 public:
     int arity{};
     ~KFunction() override;
+    KFunction(std::string const&);
     std::string to_string() override;
-    std::string* name = nullptr;
+    std::string name = "";
     std::vector<uint8_t> bytes;
     std::vector<Value> locals;
 };
@@ -76,7 +77,8 @@ class VM {
 public:
    VM();
    ~VM();
-   int interp_chunk(std::vector<uint8_t> chunk);
+   int interp_chunk(KFunction*);
+   int interp(std::vector<uint8_t> const&);
    void dump(std::vector<uint8_t> chunk);
    size_t add_value(Value v);
    size_t add_word(std::string const&);
@@ -85,7 +87,6 @@ public:
    std::vector<std::string> words;
 private:
    std::unordered_map<std::string, Value> globals;
-   std::vector<Value> locals;
    std::forward_list<HeapObj*> objs;
    std::stack<KFunction*> stack_frame;
 };

@@ -41,14 +41,13 @@ size_t KString::length() {
 std::string KFunction::to_string() {
     std::stringstream ss{};
     ss << "(" 
-       << (name == nullptr ? "<anonymous>" : *name) 
+       << (name == "" ? "<anonymous>" : name) 
        << " " << arity << ")";
     return ss.str();
 }
 
-KFunction::~KFunction() {
-    delete name;
-}
+KFunction::~KFunction(){}
+KFunction::KFunction(std::string const& _name): name(_name){}
 
 Instruction into_instruction(uint8_t bc) {
     assert(bc <= 19 && bc >= 0);
@@ -98,7 +97,20 @@ size_t VM::add_word (std::string const& wrd) {
    words.push_back(wrd); 
    return words.size()-1;
 }
+int VM::interp(std::vector<uint8_t> const& global) {
+    auto global_function = new KFunction("<<global>>");
+    global_function->bytes= std::move(global);
+    stack_frame.push(global_function);
 
+    while(!stack_frame.empty()) {
+        auto cur_stack = stack_frame.top();    
+        stack_frame.pop();    
+        interp_chunk(cur_stack);
+    }
+
+    delete global_function;
+    return 0;
+}
 
 template <typename BinaryOp>
 inline void binary_math_op(BinaryOp fn, VM* vm) {
@@ -223,7 +235,10 @@ void VM::dump(std::vector<uint8_t> bytecode) {
     }
 }
 
-int VM::interp_chunk(std::vector<uint8_t> chunk){ 
+int VM::interp_chunk(KFunction* func){ 
+    auto chunk = func->bytes;
+    auto locals = func->locals;
+
     size_t instr_ptr = 0;
     while (instr_ptr < chunk.size()) {
         uint8_t i = chunk.at(instr_ptr);
