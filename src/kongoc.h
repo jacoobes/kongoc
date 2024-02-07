@@ -38,6 +38,7 @@ public:
     int arity{};
     ~KFunction() override;
     KFunction(std::string const&);
+    KFunction(std::string const&, std::vector<uint8_t>, std::vector<Value>);
     std::string to_string() override;
     std::string name = "";
     std::vector<uint8_t> bytes;
@@ -78,7 +79,6 @@ public:
    VM();
    ~VM();
    int interp_chunk(KFunction*);
-   int interp(std::vector<uint8_t> const&);
    void dump(std::vector<uint8_t> chunk);
    size_t add_value(Value v);
    size_t add_word(std::string const&);
@@ -88,7 +88,6 @@ public:
 private:
    std::unordered_map<std::string, Value> globals;
    std::forward_list<HeapObj*> objs;
-   std::stack<KFunction*> stack_frame;
 };
 
 

@@ -48,12 +48,15 @@ std::string KFunction::to_string() {
 
 KFunction::~KFunction(){}
 KFunction::KFunction(std::string const& _name): name(_name){}
+KFunction::KFunction(
+        std::string const& _name,
+        std::vector<uint8_t> bytecode,
+        std::vector<Value> _locals): name(_name),bytes(bytecode), locals(_locals){}
 
 Instruction into_instruction(uint8_t bc) {
     assert(bc <= 19 && bc >= 0);
     return static_cast<Instruction>(bc);
 }
-
 
 
 //void return_from_stack(std::stack<std::vector<uint8_t>> callstack, std::vector<uint8_t> bytecode) {
@@ -96,20 +99,6 @@ size_t VM::add_value(Value v) {
 size_t VM::add_word (std::string const& wrd) {
    words.push_back(wrd); 
    return words.size()-1;
-}
-int VM::interp(std::vector<uint8_t> const& global) {
-    auto global_function = new KFunction("<<global>>");
-    global_function->bytes= std::move(global);
-    stack_frame.push(global_function);
-
-    while(!stack_frame.empty()) {
-        auto cur_stack = stack_frame.top();    
-        stack_frame.pop();    
-        interp_chunk(cur_stack);
-    }
-
-    delete global_function;
-    return 0;
 }
 
 template <typename BinaryOp>
@@ -238,7 +227,6 @@ void VM::dump(std::vector<uint8_t> bytecode) {
 int VM::interp_chunk(KFunction* func){ 
     auto chunk = func->bytes;
     auto locals = func->locals;
-
     size_t instr_ptr = 0;
     while (instr_ptr < chunk.size()) {
         uint8_t i = chunk.at(instr_ptr);
