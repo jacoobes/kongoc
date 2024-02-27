@@ -45,7 +45,11 @@ public:
     std::vector<Value> locals;
 };
 
-
+struct CallFrame {
+    KFunction* kfn;
+    uint8_t ip;
+    std::vector<Value> slots;
+};
 
 std::ostream& operator<<(std::ostream& os, Value& value); 
 
@@ -78,7 +82,7 @@ class VM {
 public:
    VM();
    ~VM();
-   int interp_chunk(KFunction*);
+   int interp_chunk(std::vector<uint8_t> const&);
    void dump(std::vector<uint8_t> chunk);
    size_t add_value(Value v);
    size_t add_word(std::string const&);
@@ -87,6 +91,7 @@ public:
    std::vector<std::string> words;
 private:
    std::unordered_map<std::string, Value> globals;
+   std::vector<Value> locals;
    std::forward_list<HeapObj*> objs;
 };
 

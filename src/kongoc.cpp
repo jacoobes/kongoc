@@ -115,7 +115,7 @@ inline void binary_math_op(BinaryOp fn, VM* vm) {
     }
 }
 
-inline unsigned short parse_ushort (std::vector<uint8_t>& chunk, size_t location) {
+inline unsigned short parse_ushort (std::vector<uint8_t> const& chunk, size_t location) {
     return (chunk[location-1] << 8) | chunk[location];
 }
 
@@ -224,9 +224,7 @@ void VM::dump(std::vector<uint8_t> bytecode) {
     }
 }
 
-int VM::interp_chunk(KFunction* func){ 
-    auto chunk = func->bytes;
-    auto locals = func->locals;
+int VM::interp_chunk(std::vector<uint8_t> const& chunk){ 
     size_t instr_ptr = 0;
     while (instr_ptr < chunk.size()) {
         uint8_t i = chunk.at(instr_ptr);
