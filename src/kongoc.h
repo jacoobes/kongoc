@@ -7,6 +7,8 @@
 #include <variant>
 #include <functional>
 
+#define FRAMES_MAX 64
+
 enum class OTag {
     String,
     Custom
@@ -17,7 +19,6 @@ public:
     virtual std::string to_string() = 0;
     virtual ~HeapObj() = 0;
 };
-
 
 
 class KString: public HeapObj {
@@ -41,13 +42,14 @@ public:
     KFunction(std::string const&, std::vector<uint8_t>, std::vector<Value>);
     std::string to_string() override;
     std::string name = "";
-    std::vector<uint8_t> bytes;
+    std::vector<uint8_t> chunk;
     std::vector<Value> locals;
 };
 
 struct CallFrame {
     KFunction* kfn;
-    uint8_t ip;
+    //Beginning to the ip
+    uint8_t* ip;
     std::vector<Value> slots;
 };
 
@@ -74,11 +76,17 @@ enum class Instruction {
     Jmp         , // 1 operand, 2 bytes
     Pop         , // Pop one value off the stack.
     Pop_N_Local , // Pop 1-255 elements off the local registers
+    Call        ,
+    Return      ,
 };
 
 
 
 class VM {
+   std::unordered_map<std::string, Value> globals;
+   std::vector<Value> locals;
+   std::forward_list<HeapObj*> objs;
+   std::array<CallFrame, FRAMES_MAX> frames; 
 public:
    VM();
    ~VM();
@@ -89,10 +97,7 @@ public:
    std::vector<Value> values;
    std::stack<Value> stck;
    std::vector<std::string> words;
-private:
-   std::unordered_map<std::string, Value> globals;
-   std::vector<Value> locals;
-   std::forward_list<HeapObj*> objs;
+
 };
 
 

@@ -51,25 +51,13 @@ KFunction::KFunction(std::string const& _name): name(_name){}
 KFunction::KFunction(
         std::string const& _name,
         std::vector<uint8_t> bytecode,
-        std::vector<Value> _locals): name(_name),bytes(bytecode), locals(_locals){}
+        std::vector<Value> _locals): name(_name), chunk(bytecode), locals(_locals){}
 
 Instruction into_instruction(uint8_t bc) {
     assert(bc <= 19 && bc >= 0);
     return static_cast<Instruction>(bc);
 }
 
-
-//void return_from_stack(std::stack<std::vector<uint8_t>> callstack, std::vector<uint8_t> bytecode) {
-//    auto top = callstack.top();
-//    if(top.empty()) {
-//    } else {
-//    }
-//    callstack.pop(); 
-//}
-//
-//void add_to_stack(std::stack<std::vector<uint8_t>> callstack, std::vector<uint8_t> bytecode) {
-//    callstack.push(bytecode);
-//}
 
 
 VM::VM() {}
@@ -144,9 +132,7 @@ void VM::dump(std::vector<uint8_t> bytecode) {
         Instruction instruction = static_cast<Instruction>(bytecode[instr_ptr]);
         std::cout << std::setw(2) << instr_ptr << " ";
         switch (instruction) {
-            case Instruction::Halt:
-                std::cout << "Halt" << std::endl;
-                break;
+            case Instruction::Halt: std::cout << "Halt" << std::endl; break;
             case Instruction::LoadConst: {
                 instr_ptr+=1;
                 std::cout << "LoadConst  " 
@@ -154,36 +140,16 @@ void VM::dump(std::vector<uint8_t> bytecode) {
                     << values.at(bytecode[instr_ptr]) 
                     << std::endl;
             } break;
-            case Instruction::Negate: {
-                std::cout << "Negate";
-            } break;
-            case Instruction::Add:
-                std::cout << "Add" << std::endl;
-                break;
-            case Instruction::Sub:
-                std::cout << "Sub" << std::endl;
-                break;
-            case Instruction::Mul:
-                std::cout << "Mul" << std::endl;
-                break;
-            case Instruction::Div:
-                std::cout << "Div" << std::endl;
-                break;
-            case Instruction::Mod:
-                std::cout << "Mod" << std::endl;
-                break;
-            case Instruction::Lte:
-                std::cout << "Lte" << std::endl;
-                break;
-            case Instruction::Not:
-                std::cout << "Not" << std::endl;
-                break;
-            case Instruction::And:
-                std::cout << "And" << std::endl;
-                break;
-            case Instruction::Or:
-                std::cout << "Or" << std::endl;
-                break;
+            case Instruction::Negate: { std::cout << "Negate"; } break;
+            case Instruction::Add: { std::cout << "Add" << std::endl; } break;
+            case Instruction::Sub: std::cout << "Sub" << std::endl; break;
+            case Instruction::Mul: std::cout << "Mul" << std::endl; break;
+            case Instruction::Div: std::cout << "Div" << std::endl; break;
+            case Instruction::Mod: std::cout << "Mod" << std::endl; break;
+            case Instruction::Lte: std::cout << "Lte" << std::endl; break;
+            case Instruction::Not: std::cout << "Not" << std::endl; break;
+            case Instruction::And: std::cout << "And" << std::endl; break;
+            case Instruction::Or: std::cout << "Or" << std::endl; break;
             case Instruction::DefGlobal:
                 std::cout << "DefGlobal " << ++instr_ptr << std::endl;
                 break;
@@ -203,28 +169,23 @@ void VM::dump(std::vector<uint8_t> bytecode) {
                 std::cout << " " << jump+instr_ptr << "\n";
                 //instr_ptr += jump;
             } break;
-            case Instruction::Pop: {
-                 std::cout << "Pop";
-            } break;
-            case Instruction::DefLocal: {
-                std::cout << "DefLocal "  << std::endl;
-            } break;
-            case Instruction::GetLocal: {
-                std::cout << "GetLocal " << ++instr_ptr << std::endl;
-            } break;
-            case Instruction::Pop_N_Local: {
-                std::cout << "Pop_N_Local " << ++instr_ptr << std::endl;
-            } break;
-
-            default:
-                std::cout << "Unknown instruction " << instr_ptr << std::endl;
+            case Instruction::Pop: { std::cout << "Pop"; } break;
+            case Instruction::DefLocal: { std::cout << "DefLocal "  << std::endl; } break;
+            case Instruction::GetLocal: { std::cout << "GetLocal " << ++instr_ptr << std::endl; } break;
+            case Instruction::Pop_N_Local: { std::cout << "Pop_N_Local " << ++instr_ptr << std::endl; } break;
+            case Instruction::Call:
                 break;
-        }
+            case Instruction::Return:
+                break;
+            }
         instr_ptr += 1;
     }
 }
 
-int VM::interp_chunk(std::vector<uint8_t> const& chunk){ 
+
+
+int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
+    CallFrame* frame = &frames.at(0); 
     size_t instr_ptr = 0;
     while (instr_ptr < chunk.size()) {
         uint8_t i = chunk.at(instr_ptr);
@@ -234,10 +195,7 @@ int VM::interp_chunk(std::vector<uint8_t> const& chunk){
                 instr_ptr += 1;
                 stck.push(values.at(chunk.at(instr_ptr)));
             } break;
-            case Instruction::Halt: {
-                dump(chunk);
-                return Success;
-            } break;
+            case Instruction::Halt: { dump(chunk); return Success; } break;
             case Instruction::Negate: 
               if(auto top = std::get_if<float>(&stck.top())) {
                   stck.pop();
@@ -255,18 +213,10 @@ int VM::interp_chunk(std::vector<uint8_t> const& chunk){
                 exit(1);
               } break;
             break;
-            case Instruction::Add: 
-                binary_math_op(std::plus<float>(), this);
-                break;
-            case Instruction::Sub:
-                binary_math_op(std::minus<float>(), this);
-                break;
-            case Instruction::Mul:
-                binary_math_op(std::multiplies<float>(), this);
-                break;
-            case Instruction::Div:
-                binary_math_op(std::divides<float>(), this);
-                break;
+            case Instruction::Add: binary_math_op(std::plus<float>(), this); break;
+            case Instruction::Sub: binary_math_op(std::minus<float>(), this); break;
+            case Instruction::Mul: binary_math_op(std::multiplies<float>(), this); break;
+            case Instruction::Div: binary_math_op(std::divides<float>(), this); break;
             case Instruction::Mod:
                 // Implement as needed
                 break;
@@ -353,7 +303,11 @@ int VM::interp_chunk(std::vector<uint8_t> const& chunk){
                 }
                 assert(n > 0);
             } break;
-        }
+            case Instruction::Call:
+                break;
+            case Instruction::Return:
+                break;
+            }
         instr_ptr += 1;
     }
     return 0;
