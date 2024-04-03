@@ -32,8 +32,46 @@ public:
     const char* chars();
 };
 
-using Value = std::variant<bool, float, HeapObj*>;
-
+struct expr;
+//struct expr_list {
+//  struct expr* hd;
+//  struct expr_list* tl;
+//};
+enum ValueTag {
+    NUMBER,
+    OBJECT
+};
+struct Value {
+  ValueTag tag;
+  union {
+    double floatv;
+    HeapObj* obj;
+    //struct expr_list list;
+  };
+  Value(double num) : tag(ValueTag::NUMBER), floatv(num) {}
+  Value(const Value& other) : tag(other.tag) {
+        switch (tag) {
+            case ValueTag::NUMBER:
+                floatv = other.floatv;
+                break;
+            case ValueTag::OBJECT:
+                obj = other.obj;
+                break;
+        }
+    }
+    Value(Value&& other) noexcept : tag(other.tag) {
+        switch (tag) {
+            case ValueTag::NUMBER:
+                floatv = other.floatv;
+                break;
+            case ValueTag::OBJECT:
+                obj = other.obj;
+                other.obj = nullptr; // Set the moved-from obj to nullptr
+                break;
+        }
+    }
+};
+double as_double(const Value& v); 
 class KFunction: public HeapObj {
 public:
     int arity{};

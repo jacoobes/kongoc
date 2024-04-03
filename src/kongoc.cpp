@@ -6,14 +6,24 @@
 #include <iostream>
 #include <stdint.h>
 
+bool holds_alternative(Value v, ValueTag vt) {
+    return v.tag  == vt;
+}
+
+double as_double(const Value& v) {
+    assert(v.tag == ValueTag::NUMBER);
+    return v.floatv;
+}
+
+Value valdouble(double d){
+    return Value(d);
+}
 
 std::ostream & operator<<(std::ostream& os, Value& value) {
-    if(std::holds_alternative<float>(value)) {
-        os << std::get<float>(value);
-    } else if (std::holds_alternative<bool>(value)) {
-        os << (std::get<bool>(value) ? "true" : "false");
-    } else if(auto hobj = std::get_if<HeapObj*>(&value)) {
-        os << (*hobj)->to_string();
+    if(holds_alternative(value, ValueTag::NUMBER)) {
+        os << value.floatv;
+    }  else if(holds_alternative(value, ValueTag::OBJECT)) {
+        os << value.obj->to_string();
     }
     return os;
 }
@@ -76,8 +86,8 @@ enum StatusCode {
 
 
 size_t VM::add_value(Value v) {
-    if(auto obj = std::get_if<HeapObj*>(&v)){
-        objs.push_front(*obj);
+    if(holds_alternative(v, ValueTag::OBJECT)){
+        objs.push_front(v.obj);
     }
     values.push_back(v);
     return values.size()-1;
@@ -93,9 +103,9 @@ template <typename BinaryOp>
 inline void binary_math_op(BinaryOp fn, VM* vm) {
     auto r = vm->stck.top(); vm->stck.pop();
     auto l = vm->stck.top(); vm->stck.pop();
-    if(auto lef = std::get_if<float>(&l);
-       auto right = std::get_if<float>(&r)) {
-       auto new_val = std::invoke(fn, *lef, *right);
+     if(holds_alternative(l, ValueTag::NUMBER) &&
+        holds_alternative(r, ValueTag::NUMBER)) {
+       auto new_val = std::invoke(fn, as_double(l), as_double(r));
        vm->stck.push(new_val);
     } else {
         printf("Failed to call binary op: mismatch types");
@@ -185,7 +195,6 @@ void VM::dump(std::vector<uint8_t> bytecode) {
 
 
 int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
-    CallFrame* frame = &frames.at(0); 
     size_t instr_ptr = 0;
     while (instr_ptr < chunk.size()) {
         uint8_t i = chunk.at(instr_ptr);
@@ -196,23 +205,16 @@ int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
                 stck.push(values.at(chunk.at(instr_ptr)));
             } break;
             case Instruction::Halt: { dump(chunk); return Success; } break;
-            case Instruction::Negate: 
-              if(auto top = std::get_if<float>(&stck.top())) {
-                  stck.pop();
-                  stck.push(-*top);
-              } else {
-                printf("Cannot negate non number"); 
-                exit(1);
-              } break;
-            case Instruction::Not: 
-              if(auto top = std::get_if<bool>(&stck.top())) {
-                  stck.pop();
-                  stck.push(!*top);
-              } else {
-                printf("Cannot negate boolean"); 
-                exit(1);
-              } break;
-            break;
+            case Instruction::Negate: {
+                auto top = stck.top();
+                stck.pop();
+                stck.push(-as_double(top));
+            } break;
+            case Instruction::Not: {
+                auto top = stck.top();
+                stck.pop();
+                stck.push(!as_double(top));
+            } break;
             case Instruction::Add: binary_math_op(std::plus<float>(), this); break;
             case Instruction::Sub: binary_math_op(std::minus<float>(), this); break;
             case Instruction::Mul: binary_math_op(std::multiplies<float>(), this); break;
@@ -221,39 +223,35 @@ int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
                 // Implement as needed
                 break;
             case Instruction::Lte: {
-                auto rf = std::get_if<float>(&stck.top()),
-                     lf = std::get_if<float>(&stck.top());
+                auto rf = as_double(stck.top()),
+                     lf = as_double(stck.top());
                 stck.pop();
                 stck.pop();
                 //if both are floats
                 if(rf && lf) {
-                   stck.push(*lf <= *rf);
+                   stck.push(lf <= rf);
                 } else {
-                   stck.push(false);
+                   stck.push(0);
                 }
             } break;
             case Instruction::And: {
-                auto r = stck.top(); stck.pop();
-                auto l = stck.top(); stck.pop();
-                auto rf = std::get_if<bool>(&r),
-                     lf = std::get_if<bool>(&l);
+                auto r = as_double(stck.top()); stck.pop();
+                auto l = as_double(stck.top()); stck.pop();
                 //if both are bools
-                if(rf && lf) {
-                   stck.push(*lf && *rf);
+                if(r && l) {
+                   stck.push(valdouble(l && r));
                 } else {
-                   stck.push(false);
+                   stck.push(valdouble(0));
                 }
             } break;
             case Instruction::Or: {
-                auto r = stck.top(); stck.pop();
-                auto l = stck.top(); stck.pop();
-                auto rf = std::get_if<bool>(&r),
-                     lf = std::get_if<bool>(&l);
+                auto r = as_double(stck.top()); stck.pop();
+                auto l = as_double(stck.top()); stck.pop();
                 //if both are bools
-                if(rf && lf) {
-                   stck.push(*lf || *rf);
+                if(r && l) {
+                   stck.push(valdouble(l || r));
                 } else {
-                   stck.push(false);
+                   stck.push(valdouble(0));
                 }
             } break;
             case Instruction::DefGlobal: {
@@ -272,11 +270,9 @@ int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
             case Instruction::JmpIfFalse: {
                 instr_ptr += 2;
                 auto jump = parse_ushort(chunk, instr_ptr);
-                auto val = stck.top(); stck.pop();
-                if(auto b = std::get_if<bool>(&val)) {
-                   if(!*b) { 
-                       instr_ptr+=jump; 
-                   }
+                auto val = as_double(stck.top()); stck.pop();
+                if(!val) {
+                    instr_ptr+=jump;
                 }
             } break;
             case Instruction::Jmp: {
