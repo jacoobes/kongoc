@@ -15,9 +15,7 @@ double as_double(const Value& v) {
     return v.floatv;
 }
 
-Value valdouble(double d){
-    return Value(d);
-}
+
 
 std::ostream & operator<<(std::ostream& os, Value& value) {
     if(holds_alternative(value, ValueTag::NUMBER)) {
@@ -194,6 +192,7 @@ void VM::dump(std::vector<uint8_t> bytecode) {
 
 
 
+
 int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
     size_t instr_ptr = 0;
     while (instr_ptr < chunk.size()) {
@@ -239,9 +238,9 @@ int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
                 auto l = as_double(stck.top()); stck.pop();
                 //if both are bools
                 if(r && l) {
-                   stck.push(valdouble(l && r));
+                   stck.push(l && r);
                 } else {
-                   stck.push(valdouble(0));
+                   stck.push(0);
                 }
             } break;
             case Instruction::Or: {

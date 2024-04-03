@@ -32,10 +32,6 @@ public:
     const char* chars();
 };
 
-struct expr;
-//struct expr_list {
-//  struct expr* hd;
-//  struct expr_list* tl;
 //};
 enum ValueTag {
     NUMBER,
@@ -51,22 +47,15 @@ struct Value {
   Value(double num) : tag(ValueTag::NUMBER), floatv(num) {}
   Value(const Value& other) : tag(other.tag) {
         switch (tag) {
-            case ValueTag::NUMBER:
-                floatv = other.floatv;
-                break;
-            case ValueTag::OBJECT:
-                obj = other.obj;
-                break;
+            case ValueTag::NUMBER: floatv = other.floatv; break;
+            case ValueTag::OBJECT: obj = other.obj; break;
         }
     }
     Value(Value&& other) noexcept : tag(other.tag) {
         switch (tag) {
-            case ValueTag::NUMBER:
-                floatv = other.floatv;
-                break;
-            case ValueTag::OBJECT:
-                obj = other.obj;
-                other.obj = nullptr; // Set the moved-from obj to nullptr
+            case ValueTag::NUMBER: floatv = other.floatv; break;
+            // Set the moved-from obj to nullptr
+            case ValueTag::OBJECT: obj = other.obj; other.obj = nullptr; 
                 break;
         }
     }
@@ -79,7 +68,7 @@ public:
     KFunction(std::string const&);
     KFunction(std::string const&, std::vector<uint8_t>, std::vector<Value>);
     std::string to_string() override;
-    std::string name = "";
+    std::string name;
     std::vector<uint8_t> chunk;
     std::vector<Value> locals;
 };
@@ -129,9 +118,11 @@ public:
    VM();
    ~VM();
    int interp_chunk(std::vector<uint8_t> const&);
+   //int interp_frames( );
    void dump(std::vector<uint8_t> chunk);
    size_t add_value(Value v);
    size_t add_word(std::string const&);
+   //void add_callframe(std::string const& name);
    std::vector<Value> values;
    std::stack<Value> stck;
    std::vector<std::string> words;
