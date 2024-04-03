@@ -248,9 +248,9 @@ int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
                 auto l = as_double(stck.top()); stck.pop();
                 //if both are bools
                 if(r && l) {
-                   stck.push(valdouble(l || r));
+                   stck.push(l || r);
                 } else {
-                   stck.push(valdouble(0));
+                   stck.push(0);
                 }
             } break;
             case Instruction::DefGlobal: {
