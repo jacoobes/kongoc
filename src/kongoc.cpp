@@ -15,6 +15,10 @@ double as_double(const Value& v) {
     return v.floatv;
 }
 
+HeapObj* as_heapobj(const Value& v) {
+    assert(v.tag == ValueTag::OBJECT);
+    return v.obj;
+}
 
 
 std::ostream & operator<<(std::ostream& os, Value& value) {
@@ -230,7 +234,7 @@ int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
                 if(rf && lf) {
                    stck.push(lf <= rf);
                 } else {
-                   stck.push(0);
+                   stck.push((double)0);
                 }
             } break;
             case Instruction::And: {
@@ -240,7 +244,7 @@ int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
                 if(r && l) {
                    stck.push(l && r);
                 } else {
-                   stck.push(0);
+                   stck.push((double)0);
                 }
             } break;
             case Instruction::Or: {
@@ -248,9 +252,9 @@ int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
                 auto l = as_double(stck.top()); stck.pop();
                 //if both are bools
                 if(r && l) {
-                   stck.push(valdouble(l || r));
+                   stck.push(l || r);
                 } else {
-                   stck.push(valdouble(0));
+                   stck.push((double)0);
                 }
             } break;
             case Instruction::DefGlobal: {

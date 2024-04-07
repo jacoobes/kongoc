@@ -45,6 +45,7 @@ struct Value {
     //struct expr_list list;
   };
   Value(double num) : tag(ValueTag::NUMBER), floatv(num) {}
+  Value(HeapObj* _obj) : tag(ValueTag::OBJECT), obj(_obj) {}
   Value(const Value& other) : tag(other.tag) {
         switch (tag) {
             case ValueTag::NUMBER: floatv = other.floatv; break;
@@ -61,6 +62,8 @@ struct Value {
     }
 };
 double as_double(const Value& v); 
+HeapObj* as_heapobj(const Value& v); 
+
 class KFunction: public HeapObj {
 public:
     int arity{};
