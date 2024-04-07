@@ -121,7 +121,7 @@ public:
    VM();
    ~VM();
    int interp_chunk(std::vector<uint8_t> const&);
-   //int interp_frames( );
+   int interp_frames();
    void dump(std::vector<uint8_t> chunk);
    size_t add_value(Value v);
    size_t add_word(std::string const&);

@@ -87,11 +87,17 @@ TEST_CASE("div") {
     REQUIRE(as_double(vm.stck.top()) == 0.5f);    
 }
 
-TEST_CASE("alloc string") { 
+TEST_CASE("alloc:string") { 
     VM vm;
     auto heap_str = new KString("deez");
     size_t right = vm.add_value(heap_str);
     REQUIRE(vm.values.size() == 1);
     REQUIRE(as_heapobj(vm.values[0]) != nullptr);
     REQUIRE(std::strcmp(static_cast<KString*>(as_heapobj(vm.values[0]))->chars(), "deez") == 0);
+}
+
+
+TEST_CASE("alloc:func") {
+
+
 }

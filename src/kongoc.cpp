@@ -194,8 +194,10 @@ void VM::dump(std::vector<uint8_t> bytecode) {
     }
 }
 
-
-
+int VM::interp_frames() {
+    size_t instr_ptr=0;
+    return 0;
+}
 
 int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
     size_t instr_ptr = 0;
