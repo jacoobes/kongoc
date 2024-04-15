@@ -77,9 +77,9 @@ public:
 };
 
 struct CallFrame {
-    KFunction* kfn;
+    KFunction* function;
     //Beginning to the ip
-    size_t* ip;
+    uint8_t* ip;
     std::vector<Value> slots;
 };
 
@@ -111,7 +111,6 @@ enum class Instruction {
 };
 
 
-
 class VM {
    std::unordered_map<std::string, Value> globals;
    std::vector<Value> locals;
@@ -122,15 +121,17 @@ public:
    ~VM();
    int interp_chunk(std::vector<uint8_t> const&);
    int interp_frames();
+   bool call(KFunction* fn, int argc);
    void dump(std::vector<uint8_t> chunk);
    size_t add_value(Value v);
    size_t add_word(std::string const&);
+   bool call_value(Value callee, int argc);
    //void add_callframe(std::string const& name);
    std::vector<Value> values;
    std::stack<Value> stck;
    std::vector<std::string> words;
    size_t instr_ptr{};
-
+   int frameCount{};
 };
 
 

@@ -6,6 +6,7 @@
 #include <iostream>
 #include <stdint.h>
 
+#define FRAMES_MAX 64
 bool holds_alternative(Value v, ValueTag vt) {
     return v.tag  == vt;
 }
@@ -25,6 +26,7 @@ std::ostream & operator<<(std::ostream& os, Value& value) {
     if(holds_alternative(value, ValueTag::NUMBER)) {
         os << value.floatv;
     }  else if(holds_alternative(value, ValueTag::OBJECT)) {
+#define FRAMES_MAX 64
         os << value.obj->to_string();
     }
     return os;
@@ -118,10 +120,28 @@ inline void binary_math_op(BinaryOp fn, VM* vm) {
 inline unsigned short parse_ushort (std::vector<uint8_t> const& chunk, size_t location) {
     return (chunk[location-1] << 8) | chunk[location];
 }
-bool call_value(Value callee, int argc) {
+
+bool VM::call(KFunction* function, int argCount) {
+    if(argCount != function->arity) {
+        std::cout << "Arity count differed. Expected " << function->arity << "Got " << argCount;
+        return false;
+    }
+    if(frameCount == FRAMES_MAX) {
+        std::cout << "Stack overflow" << std::endl;
+        return false;
+    }
+    CallFrame& frame = frames[frameCount++];
+    frame.function = function;
+    frame.ip = &function->chunk[0];
+    return true;
+}
+
+bool VM::call_value(Value callee, int argc) {
     if(holds_alternative(callee, ValueTag::OBJECT)) {
         auto obj = as_heapobj(callee);
-        
+        if(auto* fn = dynamic_cast<KFunction*>(obj)) {
+            return call(fn, argc);
+        }
     }
     printf("Can only call functions\n");
     return false;
@@ -312,8 +332,9 @@ int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
                 }
                 assert(n > 0);
             } break;
-            case Instruction::Call:
-                break;
+            case Instruction::Call: {
+                
+            } break;
             case Instruction::Return:
                 break;
             }
