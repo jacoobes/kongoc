@@ -26,7 +26,6 @@ std::ostream & operator<<(std::ostream& os, Value& value) {
     if(holds_alternative(value, ValueTag::NUMBER)) {
         os << value.floatv;
     }  else if(holds_alternative(value, ValueTag::OBJECT)) {
-#define FRAMES_MAX 64
         os << value.obj->to_string();
     }
     return os;
@@ -333,7 +332,11 @@ int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
                 assert(n > 0);
             } break;
             case Instruction::Call: {
-                
+                instr_ptr += 1;
+                int argc = chunk.at(instr_ptr);
+                if(!call_value(values.at(chunk.at(instr_ptr)), argc)) {
+                    return Fail;
+                } 
             } break;
             case Instruction::Return:
                 break;
