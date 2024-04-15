@@ -98,6 +98,11 @@ TEST_CASE("alloc:string") {
 
 
 TEST_CASE("alloc:func") {
-
-
+    VM vm;
+    auto fn = new KFunction("test");
+    vm.add_value(fn);
+    REQUIRE(static_cast<KFunction*>(as_heapobj(vm.values[0])) != nullptr);
 }
+
+
+

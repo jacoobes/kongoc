@@ -79,7 +79,7 @@ public:
 struct CallFrame {
     KFunction* kfn;
     //Beginning to the ip
-    uint8_t* ip;
+    size_t* ip;
     std::vector<Value> slots;
 };
 
@@ -129,6 +129,7 @@ public:
    std::vector<Value> values;
    std::stack<Value> stck;
    std::vector<std::string> words;
+   size_t instr_ptr{};
 
 };
 

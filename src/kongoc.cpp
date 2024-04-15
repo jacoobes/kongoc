@@ -118,6 +118,14 @@ inline void binary_math_op(BinaryOp fn, VM* vm) {
 inline unsigned short parse_ushort (std::vector<uint8_t> const& chunk, size_t location) {
     return (chunk[location-1] << 8) | chunk[location];
 }
+bool call_value(Value callee, int argc) {
+    if(holds_alternative(callee, ValueTag::OBJECT)) {
+        auto obj = as_heapobj(callee);
+        
+    }
+    printf("Can only call functions\n");
+    return false;
+}
 
 void VM::dump(std::vector<uint8_t> bytecode) {
     std::cout << "DUMP:\n";
@@ -185,8 +193,8 @@ void VM::dump(std::vector<uint8_t> bytecode) {
             case Instruction::DefLocal: { std::cout << "DefLocal "  << std::endl; } break;
             case Instruction::GetLocal: { std::cout << "GetLocal " << ++instr_ptr << std::endl; } break;
             case Instruction::Pop_N_Local: { std::cout << "Pop_N_Local " << ++instr_ptr << std::endl; } break;
-            case Instruction::Call:
-                break;
+            case Instruction::Call: {
+            } break;
             case Instruction::Return:
                 break;
             }
@@ -196,11 +204,11 @@ void VM::dump(std::vector<uint8_t> bytecode) {
 
 int VM::interp_frames() {
     size_t instr_ptr=0;
+    
     return 0;
 }
 
 int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
-    size_t instr_ptr = 0;
     while (instr_ptr < chunk.size()) {
         uint8_t i = chunk.at(instr_ptr);
         Instruction instruction = into_instruction(i);
