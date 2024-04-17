@@ -74,6 +74,7 @@ public:
     std::string name;
     std::vector<uint8_t> chunk;
     std::vector<Value> locals;
+    bool top_level = false;
 };
 
 struct CallFrame {
@@ -119,8 +120,7 @@ class VM {
 public:
    VM();
    ~VM();
-   int interp_chunk(std::vector<uint8_t> const&);
-   int interp_frames();
+   int interp_chunk();
    bool call(KFunction* fn, int argc);
    void dump(std::vector<uint8_t> chunk);
    size_t add_value(Value v);

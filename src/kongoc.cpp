@@ -221,13 +221,10 @@ void VM::dump(std::vector<uint8_t> bytecode) {
     }
 }
 
-int VM::interp_frames() {
-    size_t instr_ptr=0;
-    
-    return 0;
-}
 
-int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
+int VM::interp_chunk() {
+    CallFrame* callframe = &frames[frameCount];
+    auto chunk = callframe->function->chunk;
     while (instr_ptr < chunk.size()) {
         uint8_t i = chunk.at(instr_ptr);
         Instruction instruction = into_instruction(i);
@@ -333,6 +330,7 @@ int VM::interp_chunk(std::vector<uint8_t> const& chunk) {
             } break;
             case Instruction::Call: {
                 instr_ptr += 1;
+                frameCount++;
                 int argc = chunk.at(instr_ptr);
                 if(!call_value(values.at(chunk.at(instr_ptr)), argc)) {
                     return Fail;
