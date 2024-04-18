@@ -80,8 +80,9 @@ public:
 struct CallFrame {
     KFunction* function;
     //Beginning to the ip
+    //
     uint8_t* ip;
-    std::vector<Value> slots;
+    size_t slot_start;
 };
 
 std::ostream& operator<<(std::ostream& os, Value& value); 
@@ -114,12 +115,12 @@ enum class Instruction {
 
 class VM {
    std::unordered_map<std::string, Value> globals;
-   std::vector<Value> locals;
    std::forward_list<HeapObj*> objs;
    std::array<CallFrame, FRAMES_MAX> frames; 
 public:
    VM();
    ~VM();
+   int interp();
    int interp_chunk();
    bool call(KFunction* fn, int argc);
    void dump(std::vector<uint8_t> chunk);
@@ -133,6 +134,3 @@ public:
    size_t instr_ptr{};
    int frameCount{};
 };
-
-
-

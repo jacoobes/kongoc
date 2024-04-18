@@ -7,16 +7,14 @@
 #include <stdint.h>
 
 #define FRAMES_MAX 64
-bool holds_alternative(Value v, ValueTag vt) {
-    return v.tag  == vt;
-}
+bool holds_alternative(Value v, ValueTag vt) { return v.tag  == vt; }
 
-double as_double(const Value& v) {
+inline double as_double(const Value& v) {
     assert(v.tag == ValueTag::NUMBER);
     return v.floatv;
 }
 
-HeapObj* as_heapobj(const Value& v) {
+inline HeapObj* as_heapobj(const Value& v) {
     assert(v.tag == ValueTag::OBJECT);
     return v.obj;
 }
@@ -222,9 +220,11 @@ void VM::dump(std::vector<uint8_t> bytecode) {
 }
 
 
+
 int VM::interp_chunk() {
     CallFrame* callframe = &frames[frameCount];
     auto chunk = callframe->function->chunk;
+    auto locals = callframe->function->locals;
     while (instr_ptr < chunk.size()) {
         uint8_t i = chunk.at(instr_ptr);
         Instruction instruction = into_instruction(i);
@@ -235,13 +235,11 @@ int VM::interp_chunk() {
             } break;
             case Instruction::Halt: { dump(chunk); return Success; } break;
             case Instruction::Negate: {
-                auto top = stck.top();
-                stck.pop();
+                auto top = stck.top(); stck.pop();
                 stck.push(-as_double(top));
             } break;
             case Instruction::Not: {
-                auto top = stck.top();
-                stck.pop();
+                auto top = stck.top(); stck.pop();
                 stck.push(!as_double(top));
             } break;
             case Instruction::Add: binary_math_op(std::plus<float>(), this); break;
@@ -317,8 +315,7 @@ int VM::interp_chunk() {
                 locals.push_back(val);
             } break;
             case Instruction::GetLocal: {
-                instr_ptr += 1;
-                stck.push(locals[chunk.at(instr_ptr)]);
+                instr_ptr += 1; stck.push(locals[chunk.at(instr_ptr)]);
             } break;
             case Instruction::Pop_N_Local: {
                 instr_ptr += 1;
@@ -329,16 +326,22 @@ int VM::interp_chunk() {
                 assert(n > 0);
             } break;
             case Instruction::Call: {
-                instr_ptr += 1;
-                frameCount++;
+                instr_ptr += 1; frameCount++;
                 int argc = chunk.at(instr_ptr);
                 if(!call_value(values.at(chunk.at(instr_ptr)), argc)) {
                     return Fail;
-                } 
+                }
             } break;
-            case Instruction::Return:
-                break;
-            }
+            case Instruction::Return: {
+                Value res = stck.top(); stck.pop();
+                frameCount--;
+                if(frameCount == 0) {
+                    stck.pop();
+                    return Success;
+                }
+                //todo
+            } break;
+        }
         instr_ptr += 1;
     }
     return 0;
